@@ -4,8 +4,8 @@ import { useMemo } from "react";
 import { mergeDeep, MergeValues } from "@prozilla-os/shared";
 
 export function useSkinOverrides<Override>(overrides: Map<typeof Skin, Override>): Override | undefined;
-export function useSkinOverrides<Override, Default>(overrides: Map<typeof Skin, Override>, defaultValue: Default): MergeValues<Default, Override, true>;
-export function useSkinOverrides<Override, Default>(overrides: Map<typeof Skin, Override>, defaultValue?: Default): Default | Override | MergeValues<Default, Override> | undefined {
+export function useSkinOverrides<Default, Override = undefined>(overrides: Map<typeof Skin, Override>, defaultValue: Default): MergeValues<Default, Override, true>;
+export function useSkinOverrides<Default, Override>(overrides: Map<typeof Skin, Override>, defaultValue?: Default): Default | Override | MergeValues<Default, Override> | undefined {
 	const skin = useSkin();
 	const override = useMemo(() => {
 		const entries = Array.from(overrides.entries());
