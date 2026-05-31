@@ -91,6 +91,18 @@ export const PACKAGES: PackageData[] = [
 	},
 ];
 
+export const PACKAGE_PATHS = PACKAGES
+	.filter((packageData) => packageData.link !== "prozilla-os")
+	.map((packageData) => packageData.link);
+
+export function packagePathToId(path: string): string {
+	if (path === "prozilla-os")
+		return path;
+
+	const name = path.replace(/^.*\//, "");
+	return "@prozilla-os/" + name;
+}
+
 export const packageSidebars = (packages: PackageData[]): DefaultTheme.Sidebar => {
 	const sidebar: DefaultTheme.Sidebar = {};
 

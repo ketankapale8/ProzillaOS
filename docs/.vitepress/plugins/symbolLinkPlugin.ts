@@ -1,31 +1,60 @@
 import type MarkdownIt from "markdown-it";
-import type { SymbolEntry } from "./symbolRegistry";
+import type { Registry, SymbolCategory } from "./symbolRegistry";
+import { PACKAGE_PATHS } from "../packages.config";
+import { resolveUrl } from "@prozilla-os/shared";
 
-function getRelativePath(sourcePage: string | undefined, targetPath: string) {
-	if (!sourcePage)
-		return "reference/" + targetPath;
-
-	const sourceDirectory = sourcePage.includes("/")
-		? sourcePage.substring(0, sourcePage.lastIndexOf("/") + 1)
-		: "";
-
-	const absoluteTargetPath = "reference/" + targetPath;
-
-	const sourceParts = sourceDirectory.split("/").filter(Boolean);
-	const targetParts = absoluteTargetPath.split("/").filter(Boolean);
-
-	let i = 0;
-	while (i < sourceParts.length && i < targetParts.length && sourceParts[i] === targetParts[i]) {
-		i++;
-	}
-
-	const upSegments = sourceParts.slice(i).map(() => "..");
-	const downSegments = targetParts.slice(i);
-
-	return [...upSegments, ...downSegments].join("/");
+function getLink(targetPath: string, isIndex: boolean) {
+	const href = resolveUrl("/reference", targetPath);
+	return isIndex ? href + "/" : href;
 }
 
-export function symbolLinkPlugin(markdownIt: MarkdownIt, options: { registry: Map<string, SymbolEntry> }) {
+function findSymbolEntry(registry: Registry, content: string) {
+	return resolveSymbol(registry, content)
+		?? resolveComponentSymbol(registry, content)
+		?? resolveFunctionSymbol(registry, content);
+}
+
+function resolveComponentSymbol(registry: Registry, content: string) {
+	if (!content.startsWith("<") || !content.endsWith(">"))
+		return;
+
+	const name = content.replace(/^<|\/?>$/g, "").trim();
+	if (name.length === 0)
+		return;
+
+	return resolveSymbol(registry, name, "component");
+}
+
+function resolveFunctionSymbol(registry: Registry, content: string) {
+	if (!content.endsWith("()") || content.length <= 2)
+		return;
+
+	const name = content.slice(0, -2).trim();
+	if (name.length === 0)
+		return;
+
+	return resolveSymbol(registry, name, "function");
+}
+
+function resolveSymbol(registry: Registry, name: string, category?: SymbolCategory) {
+	let packageName: string | undefined = undefined;
+
+	const hashIndex = name.indexOf("#");
+	if (hashIndex > 0 && hashIndex < name.length - 1) {
+		name = name.slice(hashIndex + 1).trim();
+
+		const packageId = name.slice(0, hashIndex).trim();
+		const packageEntry = registry.get(packageId);
+		if (packageEntry)
+			packageName = packageEntry.packageName;
+	}
+
+	const found = registry.get(name);
+	if (found && (!packageName || found.packageName === packageName) && (!category || found.category === category))
+		return found;
+}
+
+export function symbolLinkPlugin(markdownIt: MarkdownIt, options: { registry: Registry }) {
 	const { registry } = options;
 
 	if (registry.size === 0)
@@ -59,36 +88,20 @@ export function symbolLinkPlugin(markdownIt: MarkdownIt, options: { registry: Ma
 				if (child.type !== "code_inline" || linkDepth > 0)
 					continue;
 
-				const content = child.content;
-				if (content.length < 2)
+				const content = child.content.trim();
+				if (!content.length)
 					continue;
 
-				let symbolName = content;
-				let symbolEntry: SymbolEntry | undefined;
-
-				if (symbolName.startsWith("@")) {
-					const slashIndex = symbolName.indexOf("/");
-					if (slashIndex > 1) {
-						const packagePrefix = symbolName.substring(1, slashIndex);
-						symbolName = symbolName.substring(slashIndex + 1);
-
-						symbolEntry = registry.get(symbolName);
-						if (symbolEntry?.packageName !== packagePrefix && symbolEntry?.packageName !== "apps/" + packagePrefix) {
-							symbolEntry = undefined;
-						}
-					}
-				} else {
-					symbolEntry = registry.get(symbolName);
-				}
+				const symbolEntry = findSymbolEntry(registry, content);
 
 				if (!symbolEntry)
 					continue;
 
-				const sourcePage = (state.env as Record<string, string | undefined>).relativePath;
-				const href = getRelativePath(sourcePage, symbolEntry.path);
+				const href = getLink(symbolEntry.path, [...PACKAGE_PATHS, "prozilla-os"].includes(symbolEntry.path));
 
 				const openToken = new state.Token("link_open", "a", 1);
 				openToken.attrSet("href", href);
+				openToken.attrSet("data-symbol", content);
 
 				const closeToken = new state.Token("link_close", "a", -1);
 
