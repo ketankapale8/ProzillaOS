@@ -62,11 +62,22 @@ export function symbolLinkPlugin(markdownIt: MarkdownIt, options: { registry: Re
 
 	markdownIt.core.ruler.push("symbol_links", (state) => {
 		const tokens = state.tokens;
+		let titleDepth = 0;
 
 		for (let i = 0; i < tokens.length; i++) {
 			const token = tokens[i];
 
-			if (token.type !== "inline" || !token.children || token.children.length === 0)
+			if (token.type === "heading_open" && token.tag === "h1") {
+				titleDepth++;
+				continue;
+			}
+
+			if (token.type === "heading_close" && token.tag === "h1") {
+				titleDepth--;
+				continue;
+			}
+
+			if (token.type !== "inline" || !token.children?.length || titleDepth > 0)
 				continue;
 
 			const children = token.children;

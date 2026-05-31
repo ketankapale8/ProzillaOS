@@ -11,10 +11,16 @@ interface PackageJson {
     homepage?: string;
 }
 
+/**
+ * Options for the {@link appMetadataPlugin}.
+ */
 export interface AppMetadataPluginOptions {
 	/** Path to the app's entry file, relative to the project root. */
     entryPath: string;
-	/** Name of the app class. Defaults to `"App"`. */
+	/**
+	 * Name of the app class.
+	 * @default "App"
+	 */
     appClass?: string;
 }
 

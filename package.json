@@ -13,6 +13,7 @@
 	"scripts": {
 		"preinstall": "npx only-allow pnpm",
 		"start": "pnpm run demo:start",
+		"menu": "pnpm vite-node scripts/devMenu.ts",
 		"build": "turbo run build",
 		"stage": "turbo run root:stage",
 		"preview": "turbo run root:preview",

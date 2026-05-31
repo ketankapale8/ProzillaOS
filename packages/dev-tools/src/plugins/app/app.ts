@@ -6,6 +6,9 @@ import cssInjectedByJs from "vite-plugin-css-injected-by-js";
 import { appMetadataPlugin } from "./appMetadata";
 import { DEFAULT_SHARED_PACKAGES, type SharedPackage } from "../shared/sharedPackages";
 
+/**
+ * Options for the {@link appPlugin}.
+ */
 export interface AppPluginOptions {
 	/** Path to the app's entry file, relative to the project root. */
 	entryPath: string;

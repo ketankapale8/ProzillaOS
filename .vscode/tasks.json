@@ -2,9 +2,9 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "Start ProzillaOS",
+            "label": "Open dev menu",
             "type": "shell",
-            "command": "pnpm run start",
+            "command": "pnpm run menu",
             "group": "none",
             "presentation": {
                 "reveal": "always",

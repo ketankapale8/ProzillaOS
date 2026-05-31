@@ -3,6 +3,9 @@ import { importMapPlugin, type ImportMapPluginOptions } from "./importMap";
 import { stageSitePlugin, StageOptions } from "./stageSite";
 import react from "@vitejs/plugin-react-swc";
 
+/**
+ * Options for the {@link sitePlugin}.
+ */
 export type SitePluginOptions = StageOptions & ImportMapPluginOptions;
 
 /**

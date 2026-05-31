@@ -3,6 +3,9 @@ import { Logger } from "@prozilla-os/shared";
 import type { PluginContext } from "rollup";
 import type { Plugin } from "vite";
 
+/**
+ * Options for the {@link stageSitePlugin}.
+ */
 export interface StageOptions {
 	appsConfig: AppsConfig;
 

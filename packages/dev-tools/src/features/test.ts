@@ -35,11 +35,44 @@ function format(object: unknown, options?: InspectOptions) {
 	return inspect(object, options);
 }
 
+/**
+ * Utility functions built on top of Vitest's API to make writing tests easier.
+ * @see {@link extend}
+ */
 export interface CustomTestAPI {
+	/**
+	 * A shorthand for {@link CustomTestAPI.cases} that tests a function with a single parameter.
+	 * @param func - The function to test.
+	 * @param cases - An array of tuples. Each tuple consisting of a parameter and the corresponding expected return value.
+	 * @typeParam A - The type of parameter the function accepts.
+	 * @typeParam R - The type of value the function returns.
+	 * @example
+	 * test.simpleCases(isEven, [
+	 * 	[0, true],
+	 * 	[1, false],
+	 * 	[2, true],
+	 * ]);
+	 */
 	simpleCases: <A = unknown, R = undefined>(func: (arg: A) => R, cases: [A, R][]) => void;
+	/**
+	 * Tests each case in the array by calling the function with the first element of the tuple and comparing the return value with the second element of the tuple.
+	 * @param func - The function to test.
+	 * @param cases - An array of tuples. Each tuple consisting of an array of parameters and the corresponding expected return value.
+	 * @typeParam A - The types of parameters the function accepts.
+	 * @typeParam R - The type of value the function returns.
+	 * @example
+	 * test.cases(isEqual, [
+	 * 	[[0, 1], false],
+	 * 	[[2, 3], false],
+	 * 	[[4, 4], true],
+	 * ]);
+	 */
 	cases: <A extends unknown[] = [], R = undefined>(func: (...args: A) => R, cases: [A, R][]) => void;
 }
 
+/**
+ * The combination of Vitest's {@link TestAPI} and the {@link CustomTestAPI}.
+ */
 export type ExtendedTestAPI = TestAPI & CustomTestAPI;
 
 /**

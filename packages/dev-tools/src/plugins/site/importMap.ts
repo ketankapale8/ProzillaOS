@@ -63,6 +63,9 @@ function wrapExternal(existingExternal: ExternalOption | undefined, specifiers: 
 	};
 }
 
+/**
+ * Options for the {@link importMapPlugin}.
+ */
 export interface ImportMapPluginOptions {
 	/** Packages to expose via import map. Defaults to {@link DEFAULT_SHARED_PACKAGES}. */
 	sharedPackages?: SharedPackage[];
