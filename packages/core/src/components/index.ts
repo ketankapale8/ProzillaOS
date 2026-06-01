@@ -1,5 +1,5 @@
 export * from "./prozilla-os/ProzillaOS";
-export * from "./taskbar/Taskbar";
+export * from "./taskbar";
 export * from "./windows/WindowsView";
 export * from "./desktop/Desktop";
 

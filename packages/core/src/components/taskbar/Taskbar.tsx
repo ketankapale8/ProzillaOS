@@ -1,5 +1,6 @@
-import { memo, MouseEvent, useEffect, useRef, useState } from "react";
+import { memo, MouseEvent, useEffect, useRef, useState, type FC } from "react";
 import styles from "./Taskbar.module.css";
+import { attachSlots, type PropsWithSlots } from "../_utils/slots/slots";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSearch } from "@fortawesome/free-solid-svg-icons";
 import { ReactSVG } from "react-svg";
@@ -7,7 +8,7 @@ import { HomeMenu } from "./menus/HomeMenu";
 import { OutsideClickListener } from "../../hooks/_utils/outsideClick";
 import { SearchMenu } from "./menus/SearchMenu";
 import { useScrollWithShadow } from "../../hooks/_utils/scrollWithShadows";
-import { AppButton } from "./app-icon/AppIcon";
+import { AppButton as DefaultAppButton } from "./app-icon/AppIcon";
 import { useContextMenu } from "../../hooks/modals/contextMenu";
 import { Actions } from "../actions/Actions";
 import { ClickAction } from "../actions/actions/ClickAction";
@@ -19,42 +20,111 @@ import { useZIndex } from "../../hooks/z-index/zIndex";
 import { Battery, Calendar, Network, Volume } from "./indicators";
 import { useClassNames, useInstalledApps, useSystemManager } from "../../hooks";
 import { App, AppsConfig, Settings } from "../../features";
+import { TaskbarSlotsProvider, useTaskbarContext } from "./taskbarSlots";
 
 /**
- * Component that renders the start and search menus, pinned applications and various indicators.
+ * Props for {@link Taskbar}.
  */
-export const Taskbar = memo(() => {
-	const { systemName, taskbarConfig, appsConfig, skin } = useSystemManager();
-	const ref = useRef<HTMLDivElement>(null);
-	const settingsManager = useSettingsManager();
-	const [showHome, setShowHome] = useState(false);
-	const [showSearch, setShowSearch] = useState(false);
-	const [hideUtilMenus, setHideUtilMenus] = useState(false);
+export type TaskbarProps = PropsWithSlots<{ Menus: FC; Apps: FC; Utils: FC }>;
+
+function DefaultMenus() {
+	const { systemName, skin } = useSystemManager();
+	const inputRef = useRef<HTMLInputElement>(null);
 	const [searchQuery, setSearchQuery] = useState("");
+	const { showHome, setShowHome, showSearch, setShowSearch, setHideUtilMenus } = useTaskbarContext();
+
+	const updateShowHome = (show: boolean) => {
+		setShowHome(show);
+
+		if (show) {
+			setShowSearch(false);
+			setHideUtilMenus(true);
+		}
+	};
+
+	const updateShowSearch = (show: boolean) => {
+		setShowSearch(show);
+
+		if (show) {
+			if (searchQuery !== "") {
+				setSearchQuery("");
+			}
+
+			setShowHome(false);
+			setHideUtilMenus(true);
+			
+			if (inputRef.current) {
+				inputRef.current.focus();
+				window.scrollTo(0, document.body.scrollHeight);
+			}
+		} else {
+			setTimeout(() => {
+				if (!showSearch) {
+					setSearchQuery("");
+				}
+			}, 200);
+		}
+	};
+
+	const search = (_query: string) => {
+		updateShowSearch(true);
+	};
+
+	return <div className={useClassNames([styles.MenuIcons], "Taskbar", "MenuIcons")}>
+		<div className={styles.HomeContainer}>
+			<OutsideClickListener onOutsideClick={() => { updateShowHome(false); }}>
+				<button
+					className={useClassNames([styles.MenuButton, styles.HomeButton], "Taskbar", "HomeIcon")}
+					title="Home"
+					tabIndex={0}
+					onClick={() => { updateShowHome(!showHome); }}
+				>
+					{skin.systemIcon.endsWith(".svg")
+						? <ReactSVG src={skin.systemIcon}/>
+						: <img src={skin.systemIcon} alt={systemName}/>
+					}
+				</button>
+				<HomeMenu active={showHome} setActive={updateShowHome} search={search}/>
+			</OutsideClickListener>
+		</div>
+		<div className={styles.SearchContainer}>
+			<OutsideClickListener onOutsideClick={() => { updateShowSearch(false); }}>
+				<button
+					className={useClassNames([styles.MenuButton], "Taskbar", "SearchIcon")}
+					title="Search"
+					tabIndex={0}
+					onClick={() => { updateShowSearch(!showSearch); }}
+				>
+					<FontAwesomeIcon icon={faSearch}/>
+				</button>
+				<SearchMenu
+					active={showSearch}
+					setActive={updateShowSearch}
+					searchQuery={searchQuery}
+					setSearchQuery={setSearchQuery}
+					inputRef={inputRef}
+				/>
+			</OutsideClickListener>
+		</div>
+	</div>;
+}
+
+export interface TaskbarAppsProps {
+	renderApp?: FC<{ app: App, active: boolean, visible: boolean }>;
+}
+
+function DefaultApps({ renderApp: AppButton = DefaultAppButton }: TaskbarAppsProps) {
+	const [apps, setApps] = useState<App[]>([]);
+	const settingsManager = useSettingsManager();
+	const windows = useWindows();
+	const installedApps = useInstalledApps({ sort: false });
+	const ref = useRef<HTMLDivElement>(null);
 	const { boxShadow, onUpdate } = useScrollWithShadow({ ref: ref, shadow: {
 		offset: 20,
 		blurRadius: 10,
 		spreadRadius: -10,
 		color: { a: 25 },
 	} });
-	const inputRef = useRef<HTMLInputElement>(null);
-	const windowsManager = useWindowsManager();
-	const windows = useWindows();
-	const installedApps = useInstalledApps({ sort: false });
-	const [apps, setApps] = useState<App[]>([]);
-	const zIndex = useZIndex({ groupIndex: ZIndexManager.GROUPS.TASKBAR, index: 0 });
-
-	const settingsApp = appsConfig.getAppByRole(AppsConfig.APP_ROLES.settings);
-
-	const { onContextMenu } = useContextMenu({ Actions: (props) =>
-		<Actions avoidTaskbar={false} {...props}>
-			{settingsApp != null && 
-				<ClickAction label={`Open ${settingsApp.name}`} icon={settingsApp.iconUrl as string | undefined} onTrigger={() => {
-					windowsManager?.open(settingsApp.id);
-				}}/>
-			}
-		</Actions>,
-	});
 
 	useEffect(() => {
 		const settings = settingsManager?.getSettings(Settings.TASKBAR);
@@ -80,54 +150,76 @@ export const Taskbar = memo(() => {
 			setApps(newApps);
 		});
 	}, [installedApps, settingsManager]);
+	
+	return <div className={useClassNames([styles.AppIconsContainer], "Taskbar", "AppIcons")} data-allow-context-menu={true} style={{ boxShadow }}>
+		<div
+			className={styles.AppIcons}
+			data-allow-context-menu={true}
+			onScroll={onUpdate}
+			ref={ref}
+		>
+			{apps.map((app) => {
+				if (windows == null) return;
 
-	const updateShowHome = (show: boolean) => {
-		setShowHome(show);
+				const isActive = windows.some((window) => window.app?.id === app.id);
+				const shouldBeShown = app.isPinned || isActive;
+				return <AppButton
+					key={app.id}
+					app={app} 
+					active={isActive}
+					visible={shouldBeShown}
+				/>;
+			})}
+		</div>
+	</div>;
+}
 
-		if (show) {
-			setShowSearch(false);
-			setHideUtilMenus(true);
-		}
-	};
+function DefaultUtils() {
+	const { showUtilMenus, hideUtilMenus } = useTaskbarContext();
+	const windowsManager = useWindowsManager();
 
-	const updateShowSearch = (show: boolean) => {
-		setShowSearch(show);
+	return <div className={useClassNames([styles.UtilIcons], "Taskbar", "UtilIcons")}>
+		<Battery showUtilMenu={showUtilMenus} hideUtilMenus={hideUtilMenus}/>
+		<Network showUtilMenu={showUtilMenus} hideUtilMenus={hideUtilMenus}/>
+		<Volume showUtilMenu={showUtilMenus} hideUtilMenus={hideUtilMenus}/>
+		<Calendar showUtilMenu={showUtilMenus} hideUtilMenus={hideUtilMenus}/>
+		<button
+			title="Show Desktop"
+			className={useClassNames([styles.DesktopButton], "Taskbar", "UtilIcon", "Desktop")}
+			onClick={() => { windowsManager?.minimizeAll(); }}
+		/>
+	</div>;
+}
 
-		if (show) {
-			if (searchQuery !== "") {
-				setSearchQuery("");
+function TaskbarRoot({ children, ...slots }: TaskbarProps) {
+	const { taskbarConfig, appsConfig } = useSystemManager();
+	const [showHome, setShowHome] = useState(false);
+	const [showSearch, setShowSearch] = useState(false);
+	const [hideUtilMenus, setHideUtilMenus] = useState(false);
+	const windowsManager = useWindowsManager();
+	const zIndex = useZIndex({ groupIndex: ZIndexManager.GROUPS.TASKBAR, index: 0 });
+
+	const settingsApp = appsConfig.getAppByRole(AppsConfig.APP_ROLES.settings);
+
+	const { onContextMenu } = useContextMenu({ Actions: (props) =>
+		<Actions avoidTaskbar={false} {...props}>
+			{settingsApp != null && 
+				<ClickAction label={`Open ${settingsApp.name}`} icon={settingsApp.iconUrl as string | undefined} onTrigger={() => {
+					windowsManager?.open(settingsApp.id);
+				}}/>
 			}
+		</Actions>,
+	});
 
-			setShowHome(false);
-			setHideUtilMenus(true);
-			
-			if (inputRef.current) {
-				(inputRef.current as HTMLElement).focus();
-				window.scrollTo(0, document.body.scrollHeight);
-			}
-		} else {
-			setTimeout(() => {
-				if (!showSearch) {
-					setSearchQuery("");
-				}
-			}, 200);
-		}
-	};
-
-	const showUtilMenu = () => {
+	const showUtilMenus = () => {
 		setShowHome(false);
 		setShowSearch(false);
 		setHideUtilMenus(false);
 	};
 
-	const search = (_query: string) => {
-		updateShowSearch(true);
-	};
-
 	const modifiers: string[] = [];
-	if (showHome) {
+	if (showHome)
 		modifiers.push("HomeActive");
-	}
 
 	return <div
 		style={{ "--taskbar-height": `${taskbarConfig.height}px`, zIndex }}
@@ -138,75 +230,21 @@ export const Taskbar = memo(() => {
 				onContextMenu(event as unknown as MouseEvent<HTMLElement, MouseEvent>);
 		}}
 	>
-		<div className={useClassNames([styles.MenuIcons], "Taskbar", "MenuIcons")}>
-			<div className={styles.HomeContainer}>
-				<OutsideClickListener onOutsideClick={() => { updateShowHome(false); }}>
-					<button
-						className={useClassNames([styles.MenuButton, styles.HomeButton], "Taskbar", "HomeIcon")}
-						title="Home"
-						tabIndex={0}
-						onClick={() => { updateShowHome(!showHome); }}
-					>
-						{skin.systemIcon.endsWith(".svg")
-							? <ReactSVG src={skin.systemIcon}/>
-							: <img src={skin.systemIcon} alt={systemName}/>
-						}
-					</button>
-					<HomeMenu active={showHome} setActive={updateShowHome} search={search}/>
-				</OutsideClickListener>
-			</div>
-			<div className={styles.SearchContainer}>
-				<OutsideClickListener onOutsideClick={() => { updateShowSearch(false); }}>
-					<button
-						className={useClassNames([styles.MenuButton], "Taskbar", "SearchIcon")}
-						title="Search"
-						tabIndex={0}
-						onClick={() => { updateShowSearch(!showSearch); }}
-					>
-						<FontAwesomeIcon icon={faSearch}/>
-					</button>
-					<SearchMenu
-						active={showSearch}
-						setActive={updateShowSearch}
-						searchQuery={searchQuery}
-						setSearchQuery={setSearchQuery}
-						inputRef={inputRef}
-					/>
-				</OutsideClickListener>
-			</div>
-		</div>
-		<div className={useClassNames([styles.AppIconsContainer], "Taskbar", "AppIcons")} data-allow-context-menu={true} style={{ boxShadow }}>
-			<div
-				className={styles.AppIcons}
-				data-allow-context-menu={true}
-				onScroll={onUpdate}
-				ref={ref}
-			>
-				{apps.map((app) => {
-					if (windows == null) return;
-
-					const isActive = windows.map((window) => window.app?.id).includes(app.id);
-					const shouldBeShown = app.isPinned || isActive;
-					return <AppButton
-						windowsManager={windowsManager}
-						app={app} 
-						key={app.id}
-						active={isActive}
-						visible={shouldBeShown}
-					/>;
-				})}
-			</div>
-		</div>
-		<div className={useClassNames([styles.UtilIcons], "Taskbar", "UtilIcons")}>
-			<Battery showUtilMenu={showUtilMenu} hideUtilMenus={hideUtilMenus}/>
-			<Network showUtilMenu={showUtilMenu} hideUtilMenus={hideUtilMenus}/>
-			<Volume showUtilMenu={showUtilMenu} hideUtilMenus={hideUtilMenus}/>
-			<Calendar showUtilMenu={showUtilMenu} hideUtilMenus={hideUtilMenus}/>
-			<button
-				title="Show Desktop"
-				className={useClassNames([styles.DesktopButton], "Taskbar", "UtilIcon", "Desktop")}
-				onClick={() => { windowsManager?.minimizeAll(); }}
-			/>
-		</div>
+		<TaskbarSlotsProvider
+			context={{ showHome, setShowHome, showSearch, setShowSearch, hideUtilMenus, setHideUtilMenus, showUtilMenus }}
+			defaults={{ Menus: DefaultMenus, Apps: DefaultApps, Utils: DefaultUtils }}
+			slots={slots}
+		>
+			{children}
+		</TaskbarSlotsProvider>
 	</div>;
+}
+
+/**
+ * Component that renders the start and search menus, pinned applications and various indicators.
+ */
+export const Taskbar = attachSlots(memo(TaskbarRoot), {
+	Menus: DefaultMenus,
+	Apps: DefaultApps,
+	Utils: DefaultUtils,
 });

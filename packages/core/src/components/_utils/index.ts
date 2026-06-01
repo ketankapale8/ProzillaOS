@@ -1,4 +1,5 @@
 export * from "./button/Button";
+export * from "./slots/slots";
 export * from "./directory-list/DirectoryList";
 export * from "./dropdown-button/DropdownButton";
 export * from "./interactable/Interactable";

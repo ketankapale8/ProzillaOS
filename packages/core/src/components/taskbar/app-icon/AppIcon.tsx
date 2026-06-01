@@ -4,18 +4,17 @@ import styles from "./AppIcon.module.css";
 import { useContextMenu } from "../../../hooks/modals/contextMenu";
 import { Actions } from "../../actions/Actions";
 import { ClickAction } from "../../actions/actions/ClickAction";
-import { WindowsManager } from "../../../features/windows/windowsManager";
-import { useClassNames } from "../../../hooks";
+import { useClassNames, useWindowsManager } from "../../../hooks";
 import { VectorImage } from "../../_utils/vector-image/VectorImage";
 
 interface AppButtonProps {
 	app: App;
-	windowsManager?: WindowsManager;
 	active: boolean;
 	visible: boolean;
 }
 
-export const AppButton: FC<AppButtonProps> = memo(({ app, windowsManager, active, visible }: AppButtonProps) => {
+export const AppButton: FC<AppButtonProps> = memo(({ app, active, visible }: AppButtonProps) => {
+	const windowsManager = useWindowsManager();
 	// const settingsManager = useSettingsManager();
 	const { onContextMenu } = useContextMenu({ Actions: (props) =>
 		<Actions avoidTaskbar={false} {...props}>
