@@ -1,5 +1,5 @@
 import { test as base } from "vitest";
-import { formatTime } from "../src/features";
+import { formatTime } from "../../../src/features";
 import { extend } from "@prozilla-os/dev-tools";
 
 const test = extend(base);

@@ -1,78 +1,93 @@
-import { Ansi, ANSI, isObject } from "@prozilla-os/shared";
-import React, { ReactElement } from "react";
+import { ANSI } from "../../constants";
+import { Ansi } from "./ansi";
+import { isObject } from "../_utils";
 
 const CONTEXT = Symbol("formatContext");
-
-/**
- * Normalized version of {@link FormatOptions}.
- */
-export interface NormalizedFormatOptions {
-	/**
-	 * `true` enables ANSI colors in the formatted string.
-	 * @default true
-	 */
-	colors: boolean;
-	/**
-	 * The maximum depth for representations of container values (e.g., objects, arrays).
-	 * @default 2
-	 */
-	depth: number;
-	/**
-	 * The maximum number of array elements to represent before truncating.
-	 * @default 100
-	 */
-	maxArrayLength: number;
-	/**
-	 * The maximum amount of characters of a string to represent, before replacing the remainder with an ellipsis.
-	 * @default 80
-	 */
-	maxStringLength: number;
-	breakLength: number;
-	compact: boolean;
-	/**
-	 * `true` enables the sorting of keys in object representations.
-	 * @default false
-	 */
-	sorted: boolean;
-	/**
-	 * `true` uses single quotes instead of double quotes.
-	 * @default false
-	 */
-	singleQuotes: boolean;
-	/**
-	 * `true` places a space after every comma.
-	 * @default true
-	 */
-	spaceAfterComma: boolean;
-	stringColor?: string;
-	numberColor?: string;
-	booleanColor?: string;
-	nullColor?: string;
-	undefinedColor?: string;
-	bigintColor?: string;
-	symbolColor?: string;
-	functionColor?: string;
-	keyColor?: string;
-	dateColor?: string;
-	regexpColor?: string;
-	errorColor?: string;
-	htmlTagColor?: string;
-	reactComponentColor?: string;
-	delimiterColor?: string;
-}
+const REACT_ELEMENT = Symbol.for("react.element");
+const REACT_FRAGMENT = Symbol.for("react.fragment");
 
 /**
  * Configuration options for formatting functions.
  * @see {@link format}
  */
-export type FormatOptions = Partial<NormalizedFormatOptions>;
+export interface FormatOptions {
+	/**
+	 * `true` enables ANSI colors in the formatted string.
+	 * @default true
+	 */
+	colors?: boolean;
+	/**
+	 * The maximum depth for representations of container values (e.g., objects, arrays).
+	 * @default 2
+	 */
+	depth?: number;
+	/**
+	 * The maximum number of array elements to represent before truncating.
+	 * @default 100
+	 */
+	maxArrayLength?: number;
+	/**
+	 * The maximum amount of characters of a string to represent, before replacing the remainder with an ellipsis.
+	 * @default 80
+	 */
+	maxStringLength?: number;
+	/**
+	 * The maximum line length before wrapping to a new line.
+	 * 
+	 * This option is ignored when {@link compact} is set to `true`.
+	 * @default 60
+	 */
+	breakLength?: number;
+	/**
+	 * `true` keeps container values on a single line when possible.
+	 * @default true
+	 */
+	compact?: boolean;
+	/**
+	 * `true` enables the sorting of keys in object representations.
+	 * @default false
+	 */
+	sortKeys?: boolean;
+	/**
+	 * `true` uses single quotes instead of double quotes.
+	 * @default false
+	 */
+	singleQuotes?: boolean;
+	/**
+	 * `true` places a space after every comma.
+	 * @default true
+	 */
+	spaceAfterComma?: boolean;
+	stringColor?: string | null;
+	numberColor?: string | null;
+	booleanColor?: string | null;
+	nullColor?: string | null;
+	undefinedColor?: string | null;
+	bigintColor?: string | null;
+	symbolColor?: string | null;
+	functionColor?: string | null;
+	keyColor?: string | null;
+	dateColor?: string | null;
+	regexpColor?: string | null;
+	errorColor?: string | null;
+	htmlTagColor?: string | null;
+	reactComponentColor?: string | null;
+	delimiterColor?: string | null;
+}
 
+type NormalizedFormatOptions = Required<FormatOptions>;
 interface FormatContext extends NormalizedFormatOptions {
 	[CONTEXT]: true;
 	currentDepth: number;
 	seen: WeakSet<object>;
 	delimiter: (delimiter: string) => string;
 	separator: () => string;
+}
+
+export interface ReactElementLike {
+	type: unknown;
+	props?: unknown;
+	key?: string | null;
 }
 
 const DEFAULT_OPTIONS: NormalizedFormatOptions = {
@@ -82,7 +97,7 @@ const DEFAULT_OPTIONS: NormalizedFormatOptions = {
 	maxStringLength: 80,
 	breakLength: 60,
 	compact: true,
-	sorted: false,
+	sortKeys: false,
 	singleQuotes: false,
 	spaceAfterComma: true,
 	stringColor: ANSI.fg.green,
@@ -104,9 +119,24 @@ const DEFAULT_OPTIONS: NormalizedFormatOptions = {
 
 /**
  * Formats a value into a human-readable string representation.
+ * 
+ * This is inteded for debugging purposes.
  * @param value - The value to represent.
  * @param options - Optional formatting options.
  * @returns The formatted string.
+ * @example
+ * **Note:** The following examples omit the `options` parameter for simplicity. In reality, the return values will contain ANSI escape codes unless you explicitly set `colors` to `false`.
+ * ```tsx
+ * // Supports primitive values.
+ * format(null) === "null"
+ * format("example") === "\"example\""
+ * 
+ * // Supports objects and arrays (and other containers).
+ * format({ size: 2, values: [true, false] }) === "{ size: 2, values: [true, false] }"
+ * 
+ * // Even supports React nodes.
+ * format(<h1>Example</h1>) === "<h1>Example</h1>"
+ * ```
  */
 export function format(value: unknown, options?: FormatOptions): string {
 	const context = resolveContext(options);
@@ -118,15 +148,15 @@ export function format(value: unknown, options?: FormatOptions): string {
 	if (typeof value === "boolean")
 		return color(String(value), context.booleanColor, context.colors);
 	if (typeof value === "number") {
-		let str: string;
+		let string: string;
 		if (Number.isNaN(value)) {
-			str = "NaN";
+			string = "NaN";
 		} else if (!Number.isFinite(value)) {
-			str = value > 0 ? "Infinity" : "-Infinity";
+			string = value > 0 ? "Infinity" : "-Infinity";
 		} else {
-			str = String(value);
+			string = String(value);
 		}
-		return color(str, context.numberColor, context.colors);
+		return color(string, context.numberColor, context.colors);
 	}
 	if (typeof value === "bigint")
 		return color(value + "n", context.bigintColor, context.colors);
@@ -136,7 +166,7 @@ export function format(value: unknown, options?: FormatOptions): string {
 		return color(value.toString(), context.symbolColor, context.colors);
 	if (typeof value === "function")
 		return formatFunction(value, context);
-	if (React.isValidElement(value))
+	if (isReactElement(value))
 		return formatReactElement(value, context);
 	if (Array.isArray(value))
 		return formatArray(value, context);
@@ -176,24 +206,34 @@ export function formatFunctionCall<A extends unknown[] = [], R = undefined>(func
 }
 
 /**
- * Formats a {@link ReactElement} into a string representation.
+ * Formats a React element into a string representation.
  * @param element - The React element to represent.
  * @param options - Optional formatting options.
  * @returns The formatted string.
+ * @example
+ * **Note:** The following example omits the `options` parameter for simplicity. In reality, the return values will contain ANSI escape codes unless you explicitly set `colors` to `false`.
+ * ```tsx
+ * format(<h1>Example</h1>) === "<h1>Example</h1>"
+ * ```
  */
-export function formatReactElement(element: ReactElement, options?: FormatOptions): string {
+export function formatReactElement(element: ReactElementLike, options?: FormatOptions): string {
 	const context = resolveContext(options);
 
 	let name: string;
 	let isFragment = false;
 	if (typeof element.type === "string") {
 		name = color(element.type, context.htmlTagColor, context.colors);
+	} else if (element.type === REACT_FRAGMENT) {
+		name = "";
+		isFragment = true;
 	} else {
-		if (element.type === React.Fragment) {
-			name = "";
-			isFragment = true;
+		if (isObject(element.type) || typeof element.type === "function") {
+			let componentName = element.type.name;
+			if ("displayName" in element.type && element.type.displayName)
+				componentName = element.type.displayName;
+			name = String(componentName);
 		} else {
-			name = element.type.toString();
+			name = String(element.type);
 		}
 		name = color(name, context.reactComponentColor, context.colors);
 	}
@@ -202,15 +242,17 @@ export function formatReactElement(element: ReactElement, options?: FormatOption
 	let children: string[] = [];
 
 	if (element.props && isObject(element.props)) {
-		for (const [key, value] of Object.entries(element.props)) {
+		const keys = Object.keys(element.props);
+		if (context.sortKeys)
+			keys.sort();
+
+		for (const key of keys) {
+			const value = element.props[key];
 			if (key === "children") {
 				const childArray = Array.isArray(value) ? value : [value];
-				children = childArray.map((child) =>
-					format(child, forkContext(context))
-				);
+				children = childArray.map((child) => formatReactElementChild(child, context));
 			} else {
-				const formattedKey = color(key, context.keyColor, context.colors);
-				props.push(`${formattedKey}={${format(value, forkContext(context))}}`);
+				props.push(formatReactElementProp(key, value, context));
 			}
 		}
 	}
@@ -218,11 +260,29 @@ export function formatReactElement(element: ReactElement, options?: FormatOption
 	const open = context.delimiter("<");
 	const close = context.delimiter(">");
 	const slash = context.delimiter("/");
-
 	const formattedProps = props.length ? " " + props.join(" ") : "";
+	
 	return children.length || isFragment
 		? `${open}${name}${formattedProps}${close}${children.join("")}${open}${slash}${name}${close}`
 		: `${open}${name}${formattedProps}${slash}${close}`;
+}
+
+function formatReactElementChild(child: unknown, context: FormatContext) {
+	if (child == null || typeof child === "boolean")
+		return "";
+
+	if (typeof child === "string")
+		return child;
+
+	if (typeof child === "number")
+		return child.toString();
+
+	return isReactElement(child) ? formatReactElement(child, forkContext(context)) : "";
+}
+
+function formatReactElementProp(key: string, value: unknown, context: FormatContext) {
+	const coloredKey = color(key, context.keyColor, context.colors);
+	return `${coloredKey}={${format(value, forkContext(context))}}`;
 }
 
 /**
@@ -230,6 +290,12 @@ export function formatReactElement(element: ReactElement, options?: FormatOption
  * @param string - The string to represent.
  * @param options - Optional formatting options.
  * @returns The formatted string.
+ * @example
+ * **Note:** The following examples omit or shorten the `options` parameter for simplicity. In reality, the return values will contain ANSI escape codes unless you explicitly set `colors` to `false`.
+ * ```ts
+ * format("Example") === "\"Example\""
+ * format("Example", { singleQuotes: true }) === "'Example'"
+ * ```
  */
 export function formatString(string: string, options?: FormatOptions): string {
 	const context = resolveContext(options);
@@ -264,6 +330,12 @@ export function formatFunction(func: Function, options?: FormatOptions): string 
  * @param array - The array to represent.
  * @param options - Optional formatting options.
  * @returns The formatted string.
+ * @example
+ * **Note:** The following examples omit or shorten the `options` parameter for simplicity. In reality, the return values will contain ANSI escape codes unless you explicitly set `colors` to `false`.
+ * ```ts
+ * format([1, 2, 3]) === "[1, 2, 3]"
+ * format([1, 2, 3], { spaceAfterComma: false }) === "[1,2,3]"
+ * ```
  */
 export function formatArray(array: unknown[], options?: FormatOptions): string {
 	const context = resolveContext(options);
@@ -291,6 +363,11 @@ export function formatArray(array: unknown[], options?: FormatOptions): string {
  * @param object - The object to represent.
  * @param options - Optional formatting options.
  * @returns The formatted string.
+ * @example
+ * **Note:** The following example omits the `options` parameter for simplicity. In reality, the return values will contain ANSI escape codes unless you explicitly set `colors` to `false`.
+ * ```ts
+ * format({ first: true, second: false }) === "{ first: true, second: false }"
+ * ```
  */
 export function formatObject(object: Record<PropertyKey, unknown>, options?: FormatOptions): string {
 	const context = resolveContext(options);
@@ -299,7 +376,7 @@ export function formatObject(object: Record<PropertyKey, unknown>, options?: For
 		return guarded;
 
 	let keys = Object.keys(object);
-	if (context.sorted)
+	if (context.sortKeys)
 		keys = keys.sort();
 
 	if (keys.length === 0)
@@ -420,6 +497,10 @@ function isContext(options: FormatOptions): options is FormatContext {
 	return CONTEXT in options;
 }
 
-function color(text: string, colorCode: string | undefined, enabled: boolean) {
+function color(text: string, colorCode: string | undefined | null, enabled: boolean) {
 	return enabled && colorCode ? Ansi.apply(text, colorCode) : text;
+}
+
+function isReactElement(value: unknown): value is ReactElementLike {
+	return isObject(value) && "$$typeof" in value && value.$$typeof === REACT_ELEMENT;
 }

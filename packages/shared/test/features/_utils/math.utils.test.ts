@@ -1,6 +1,6 @@
 import { test as base } from "vitest";
 import { extend } from "@prozilla-os/dev-tools";
-import { clamp, round } from "../src/features";
+import { clamp, round } from "../../../src/features";
 
 const test = extend(base);
 

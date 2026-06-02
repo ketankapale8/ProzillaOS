@@ -1,5 +1,5 @@
 import { expect, test as base } from "vitest";
-import { interleave, randomFromArray, removeDuplicatesFromArray, removeFromArray, replaceAll } from "../src/features";
+import { interleave, randomFromArray, removeDuplicatesFromArray, removeFromArray, replaceAll } from "../../../src/features";
 import { extend } from "@prozilla-os/dev-tools";
 
 const test = extend(base);

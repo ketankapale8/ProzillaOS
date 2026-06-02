@@ -1,6 +1,7 @@
 import { defineConfig } from "vite";
 import { resolve } from "node:path";
 import dts from "vite-plugin-dts";
+import { externalizeDeps } from "vite-plugin-externalize-deps";
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -13,6 +14,7 @@ export default defineConfig({
 			pathsToAliases: false,
 			tsconfigPath: "tsconfig.build.json",
 		}),
+		externalizeDeps(),
 	],
 	build: {
 		lib: {
@@ -24,7 +26,6 @@ export default defineConfig({
 			formats: ["es"],
 		},
 		rollupOptions: {
-			external: ["vite", /^node:/, "typescript", /vite-plugin-/g, /@vitejs\/plugin-/g, "rollup", "@prozilla-os/core", "@prozilla-os/shared", "@inquirer/core"],
 			output: {
 				assetFileNames: "assets/[name][extname]",
 				chunkFileNames: "chunks/[name]-[hash].js",

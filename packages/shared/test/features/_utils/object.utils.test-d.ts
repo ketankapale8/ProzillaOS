@@ -1,5 +1,5 @@
 import { describe, test, expectTypeOf } from "vitest";
-import { Merge, MergeValues, MergeObjects, MergeArrays } from "../src/features";
+import { Merge, MergeValues, MergeObjects, MergeArrays } from "../../../src/features";
 
 describe("Merge", () => {
 	test("no sources returns target object", () => {

@@ -1,4 +1,5 @@
 import { Ansi } from "./ansi";
+import { format, FormatOptions } from "./format";
 
 /**
  * Applies a format to a string.
@@ -66,6 +67,13 @@ export class Logger {
 	prefix: {
 		[key in LogLevel | "global"]?: string
 	} = {};
+
+	/**
+	 * The function to use to turn values into strings.
+	 * @see {@link createStringifier}
+	 * @default Logger.createStringifier("pretty")
+	 */
+	stringify: (value: unknown) => string = Logger.createStringifier("pretty");
 
 	#errorCount = 0;
 	#warningCount = 0;
@@ -330,7 +338,7 @@ export class Logger {
 		// Append details on new indented lines below message
 		if (details.length) {
 			const detailsPrefix = this.indentString ? this.indentString.repeat(this.indent + 1) : "\t";
-			text += "\n" + details.map((detail) => detailsPrefix + String(detail)).join("\n");
+			text += "\n" + details.map((detail) => detailsPrefix + this.stringify(detail)).join("\n");
 		}
 
 		return this.text(text, level);
@@ -367,7 +375,7 @@ export class Logger {
 	 * @param level - The log level.
 	 */
 	parameter(label: string, value: unknown, level?: LogLevel): this {
-		return this.text(`${label}: ${this.emphasize(String(value))}`, level);
+		return this.text(`${label}: ${this.emphasize(this.stringify(value))}`, level);
 	}
 
 	/**
@@ -392,7 +400,7 @@ export class Logger {
 	 * @param level - The log level.
 	 */
 	value(label: string, value: unknown, level?: LogLevel): this {
-		return this.text(`${label}: ${this.highlight(String(value))}`, level);
+		return this.text(`${label}: ${this.highlight(this.stringify(value))}`, level);
 	}
 
 	/**
@@ -419,7 +427,7 @@ export class Logger {
 	 * @param level - The log level.
 	 */
 	lines(lines: unknown[], level?: LogLevel): this {
-		lines.map(String).forEach((line) => this.text(line, level));
+		lines.map(this.stringify.bind(this)).forEach((line) => this.text(line, level));
 		return this;
 	}
 
@@ -429,7 +437,7 @@ export class Logger {
 	 * @param level - The log level.
 	 */
 	log(message: unknown, level?: LogLevel): this {
-		return this.text(String(message), level);
+		return this.text(this.stringify(message), level);
 	}
 
 	/**
@@ -487,11 +495,9 @@ export class Logger {
 	 * @param text - The text to format.
 	 */
 	format(text: string) {
-		if (this.indentString) {
-			return this.applyPrefix(this.indentString.repeat(this.indent) + text);
-		} else {
-			return this.applyPrefix(text);
-		}
+		return this.indentString
+			? this.applyPrefix(this.indentString.repeat(this.indent) + text)
+			: this.applyPrefix(text);
 	}
 
 	/**
@@ -502,6 +508,21 @@ export class Logger {
 	applyPrefix(text: string, level?: LogLevel) {
 		const prefix = level ? this.prefix[level] : this.prefix.global;
 		return prefix ? `${prefix} ${text}` : text;
+	}
+
+	/**
+	 * Creates a stringify function that uses the {@link String} constructor.
+	 * @param type - The type of stringify function to use.
+	 */
+	static createStringifier(type?: "basic"): Logger["stringify"]
+	/**
+	 * Creates a stringify function that uses {@link format} for any non-string value.
+	 * @param type - The type of stringify function to use.
+	 * @param options - The options for {@link format}.
+	 */
+	static createStringifier(type: "pretty", options?: FormatOptions): Logger["stringify"]
+	static createStringifier(type: "basic" | "pretty" = "basic", options?: FormatOptions): Logger["stringify"] {
+		return type === "basic" ? String : (value) => typeof value === "string" ? value : format(value, options);
 	}
 
 }

@@ -3,6 +3,7 @@ import { resolve } from "node:path";
 import react from "@vitejs/plugin-react-swc";
 import dts from "vite-plugin-dts";
 import cssInjectedByJs from "vite-plugin-css-injected-by-js";
+import { externalizeDeps } from "vite-plugin-externalize-deps";
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -17,6 +18,7 @@ export default defineConfig({
 			pathsToAliases: false,
 			tsconfigPath: "tsconfig.build.json",
 		}),
+		externalizeDeps(),
 	],
 	build: {
 		lib: {
@@ -24,7 +26,6 @@ export default defineConfig({
 			formats: ["es"],
 		},
 		rollupOptions: {
-			external: ["react", "react/jsx-runtime", /@prozilla-os/],
 			output: {
 				assetFileNames: "assets/[name][extname]",
 				chunkFileNames: "chunks/[name]-[hash].js",

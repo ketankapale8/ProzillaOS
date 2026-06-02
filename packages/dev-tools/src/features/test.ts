@@ -1,5 +1,5 @@
 import { expect, TestAPI } from "vitest";
-import { formatFunctionCall } from "./format";
+import { formatFunctionCall } from "@prozilla-os/shared/logging";
 
 function testSimpleCases<A = unknown, R = undefined>(test: TestAPI, func: (arg: A) => R, cases: [A, R][]) {
 	return testCases(test, func, cases.map(([arg, expected]) => [[arg], expected]));

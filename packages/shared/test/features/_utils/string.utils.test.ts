@@ -1,6 +1,6 @@
 import { test as base } from "vitest";
 import { extend } from "@prozilla-os/dev-tools";
-import { fillTemplate, isolate, kebabToCamelCase, parseBool, resolveUrl, splitAt } from "../src/features";
+import { fillTemplate, isolate, kebabToCamelCase, parseBool, resolveUrl, splitAt } from "../../../src/features";
 
 const test = extend(base);
 

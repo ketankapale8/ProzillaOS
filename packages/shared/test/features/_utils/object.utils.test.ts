@@ -1,6 +1,6 @@
 import { test as base } from "vitest";
 import { extend } from "@prozilla-os/dev-tools";
-import { isObject, mergeDeep } from "../src/features";
+import { isObject, mergeDeep } from "../../../src/features";
 
 const test = extend(base);
 

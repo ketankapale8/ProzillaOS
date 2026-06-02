@@ -12,6 +12,21 @@
 	"type": "module",
 	"main": "dist/main.js",
 	"types": "dist/main.d.ts",
+	"exports": {
+		".": {
+			"types": "./dist/main.d.ts",
+			"default": "./dist/main.js"
+		},
+		"./logging": {
+			"types": "./dist/logging.d.ts",
+			"default": "./dist/logging.js"
+		},
+		"./utils": {
+			"types": "./dist/utils.d.ts",
+			"default": "./dist/utils.js"
+		},
+		"./package.json": "./package.json"
+	},
 	"scripts": {
 		"build": "tsc && vite build",
 		"test": "vitest",
@@ -25,11 +40,11 @@
 	"license": "MIT",
 	"devDependencies": {
 		"@types/node": "^20.19.39",
-		"@types/react": "^18.3.28",
 		"@vitejs/plugin-react-swc": "^3.11.0",
 		"typescript": "^5.9.3",
 		"vite": "^7.3.2",
 		"vite-plugin-dts": "^4.5.4",
+		"vite-plugin-externalize-deps": "^0.10.0",
 		"vite-plugin-lib-inject-css": "^2.2.2",
 		"vitest": "^4.1.5"
 	},

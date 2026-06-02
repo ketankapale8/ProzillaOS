@@ -6,6 +6,7 @@ export default mergeConfig(viteConfig, defineConfig({
 		setupFiles: "./test/setup.ts",
 		projects: [
 			{
+				extends: true,
 				test: {
 					name: "components",
 					include: ["test/components/**/*.test.{ts,tsx}", "test/features/_utils/react.utils.test.tsx"],
@@ -13,6 +14,7 @@ export default mergeConfig(viteConfig, defineConfig({
 				},
 			},
 			{
+				extends: true,
 				test: {
 					name: "features",
 					include: ["test/features/**/*.test.ts"],
@@ -20,6 +22,7 @@ export default mergeConfig(viteConfig, defineConfig({
 				},
 			},
 			{
+				extends: true,
 				test: {
 					name: "hooks",
 					include: ["test/hooks/**/*.test.{ts,tsx}"],
