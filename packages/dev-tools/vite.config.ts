@@ -16,7 +16,11 @@ export default defineConfig({
 	],
 	build: {
 		lib: {
-			entry: resolve(__dirname, "src/main.ts"),
+			entry: {
+				main: resolve(__dirname, "src/main.ts"),
+				test: resolve(__dirname, "src/features/test.ts"),
+				vite: resolve(__dirname, "src/plugins/index.ts"),
+			},
 			formats: ["es"],
 		},
 		rollupOptions: {

@@ -1,6 +1,6 @@
 import { test as base } from "vitest";
 import { isEmpty } from "../../../src/features";
-import { extend } from "../../../../dev-tools/src/features/test";
+import { extend } from "@prozilla-os/dev-tools/test";
 
 const test = extend(base);
 
@@ -24,6 +24,7 @@ test.simpleCases(isEmpty, [
 	[[0], false],
 	[[1], false],
 	[["foo"], false],
+	[<></>, false],
 	[<div></div>, false],
 	[[<div></div>], false],
 	[<><div></div></>, false],

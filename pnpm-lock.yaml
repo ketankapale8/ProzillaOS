@@ -938,6 +938,9 @@ importers:
       magic-string:
         specifier: ^0.30.21
         version: 0.30.21
+      react:
+        specifier: ^18.3.1
+        version: 18.3.1
       vite:
         specifier: ^7.3.2
         version: 7.3.2(@types/node@20.19.39)(lightningcss@1.32.0)(yaml@2.8.4)

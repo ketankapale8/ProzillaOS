@@ -12,6 +12,21 @@
 	"type": "module",
 	"main": "dist/main.js",
 	"types": "dist/main.d.ts",
+	"exports": {
+		".": {
+			"types": "./dist/main.d.ts",
+			"default": "./dist/main.js"
+		},
+		"./test": {
+			"types": "./dist/test.d.ts",
+			"default": "./dist/test.js"
+		},
+		"./vite": {
+			"types": "./dist/vite.d.ts",
+			"default": "./dist/vite.js"
+		},
+		"./package.json": "./package.json"
+	},
 	"scripts": {
 		"build": "tsc && vite build",
 		"lint": "pnpm eslint ."
@@ -28,6 +43,7 @@
 		"@prozilla-os/shared": "workspace:*",
 		"@vitejs/plugin-react-swc": "^3.11.0",
 		"magic-string": "^0.30.21",
+		"react": "^18.3.1",
 		"vite": "^7.3.2",
 		"vite-plugin-css-injected-by-js": "^3.5.2",
 		"vite-plugin-dts": "^4.5.4",
