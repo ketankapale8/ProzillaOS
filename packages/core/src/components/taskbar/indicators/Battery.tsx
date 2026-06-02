@@ -5,6 +5,7 @@ import styles from "./Battery.module.css";
 import { UtilMenu } from "../menus/UtilMenu";
 import { OutsideClickListener } from "../../../hooks/_utils/outsideClick";
 import { useClassNames } from "../../../hooks/_utils/classNames";
+import { useTaskbarContext } from "../taskbarSlots";
 
 type Battery = {
 	charging: boolean | ((prevState: boolean) => boolean);
@@ -19,12 +20,8 @@ type Battery = {
 	}) => void;
 };
 
-interface BatteryProps {
-	hideUtilMenus: boolean;
-	showUtilMenu: () => void;
-}
-
-export function Battery({ hideUtilMenus, showUtilMenu }: BatteryProps) {
+export function Battery() {
+	const { showUtilMenus, hideUtilMenus } = useTaskbarContext();
 	const [isCharging, setIsCharging] = useState(true);
 	const [percentage, setPercentage] = useState(100);
 	const [showMenu, setShowMenu] = useState(false);
@@ -77,7 +74,7 @@ export function Battery({ hideUtilMenus, showUtilMenu }: BatteryProps) {
 
 	const updateShowMenu = (show: boolean) => {
 		if (show)
-			showUtilMenu();
+			showUtilMenus();
 
 		setShowMenu(show);
 	};

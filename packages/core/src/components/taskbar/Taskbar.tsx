@@ -179,7 +179,7 @@ function DefaultUtils() {
 	const windowsManager = useWindowsManager();
 
 	return <div className={useClassNames([styles.UtilIcons], "Taskbar", "UtilIcons")}>
-		<Battery showUtilMenu={showUtilMenus} hideUtilMenus={hideUtilMenus}/>
+		<Battery/>
 		<Network showUtilMenu={showUtilMenus} hideUtilMenus={hideUtilMenus}/>
 		<Volume showUtilMenu={showUtilMenus} hideUtilMenus={hideUtilMenus}/>
 		<Calendar showUtilMenu={showUtilMenus} hideUtilMenus={hideUtilMenus}/>
@@ -241,10 +241,16 @@ function TaskbarRoot({ children, ...slots }: TaskbarProps) {
 }
 
 /**
- * Component that renders the start and search menus, pinned applications and various indicators.
+ * Component that renders the home and search menus, pinned and active applications and various indicators.
  */
 export const Taskbar = attachSlots(memo(TaskbarRoot), {
+	/** Components that renders the home and search menus in the taskbar. */
 	Menus: DefaultMenus,
+	/** Components that renders the pinned and active applications in the taskbar. */
 	Apps: DefaultApps,
-	Utils: DefaultUtils,
-});
+	/** Component that renders the indicators in the taskbar. */
+	Utils: attachSlots(DefaultUtils, {
+		/** Components that renders the battery indicator in the taskbar. */
+		Battery,
+	}, "Utils"),
+}, "Taskbar");

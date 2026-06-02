@@ -183,6 +183,7 @@ export default defineConfig(
 				checkUnknown: false
 			}],
 			"no-mixed-spaces-and-tabs": "error",
+			"@typescript-eslint/no-namespace": "off",
 		},
 	},
 	{

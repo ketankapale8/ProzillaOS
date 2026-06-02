@@ -1,4 +1,5 @@
-import { Children, createContext, useContext, type FC, type ReactNode } from "react";
+import { createContext, useContext, useMemo, type FC, type ReactNode } from "react";
+import { isEmpty } from "../../../features";
 
 /**
  * Slots are components that can override or enhance parts of a root component.
@@ -52,7 +53,12 @@ export interface SlotSystem<C> {
 	 * @typeParam S - A dictionary mapping each slot name to a component.
 	 */
 	SlotsProvider: <S extends Record<string, FC>>(props: {
-		/** The context value to provide to slots via {@link useSlotsContext}. */
+		/**
+		 * The context value to provide to slots via {@link useSlotsContext}.
+		 * 
+		 * For performance, memoize this value (e.g., with {@link useMemo} or by moving state out of render), if it is a reference, to prevent unnecessary re-renders of all slot components.
+		 * A new object reference every render causes every slot to re-render even if the data hasn't changed.
+		 */
 		context: C,
 		/** The default components to render in each slot if no override is given. */
 		defaults: S,
@@ -62,6 +68,8 @@ export interface SlotSystem<C> {
 		children?: ReactNode
 	}) => ReactNode;
 }
+
+const NO_CONTEXT = Symbol("noContext");
 
 /**
  * Creates a context for slots and a provider that renders the slots and provides the context to them.
@@ -119,14 +127,14 @@ export interface SlotSystem<C> {
  * </MyComponent>
  * ```
  */
-export function createSlots<C>(name: string): SlotSystem<C> {
-	const Context = createContext<C | null>(null);
+export function createSlots<C>(name: string, defaultValue?: C): SlotSystem<C> {
+	const Context = createContext<C | typeof NO_CONTEXT>(defaultValue ?? NO_CONTEXT);
 	Context.displayName = `${name}Context`;
 
 	function useSlotsContext(): C {
 		const context = useContext(Context);
-		if (context === null)
-			throw new Error(`${name} slots must be rendered inside ${name}.`);
+		if (context === NO_CONTEXT)
+			throw new Error(`${name} slots must be rendered inside ${name} to read from its context, because there is no default value.`);
 		return context;
 	};
 
@@ -137,13 +145,9 @@ export function createSlots<C>(name: string): SlotSystem<C> {
 		children?: ReactNode
 	}): ReactNode {
 		return <Context.Provider value={context}>
-			{Children.count(children)
+			{!isEmpty(children)
 				? children
-				: Object.entries(defaults).map(([name, Default]) => {
-					const renderKey = `render${name.charAt(0).toUpperCase() + name.slice(1)}` as keyof typeof slots;
-					const Slot = (slots[renderKey] ?? Default) as FC;
-					return <Slot key={name}/>;
-				})
+				: <SlotsView defaults={defaults} slots={slots}/>
 			}
 		</Context.Provider>;
 	}
@@ -154,10 +158,20 @@ export function createSlots<C>(name: string): SlotSystem<C> {
 	};
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
+function SlotsView<S extends Record<string, FC>>({ defaults, slots }: { defaults: S, slots: Slots<S> }) {
+	return useMemo(() => Object.entries(defaults).map(([name, Default]) => {
+		const renderKey = `render${name.charAt(0).toUpperCase() + name.slice(1)}` as keyof typeof slots;
+		const Slot = (slots[renderKey] ?? Default) as FC;
+		return <Slot key={name}/>;
+	}), [defaults, slots]);
+}
+
 /**
  * Attaches slot components to a root component as properties and names them.
  * @param root - The root component.
  * @param slots - The slot components.
+ * @param name - The name of the root component. Usually matches the name passed to {@link createSlots}. Defaults to the displayName or the function name of {@link root}.
  * @returns The root component with the slot components attached to it.
  * @example
  * ```tsx
@@ -174,14 +188,34 @@ export function createSlots<C>(name: string): SlotSystem<C> {
  * </Accordion>
  * ```
  */
-export function attachSlots<T extends FC, S extends Record<string, FC>>(root: T, slots: S) {
-	for (const [name, slot] of Object.entries(slots)) {
-		if (typeof slot === "function" && !slot.displayName) {
-			const rootName = root.displayName ?? root.name;
-			if (rootName)
+export function attachSlots<T extends FC, S extends Record<string, FC>>(root: T, slots: S, name?: string) {
+	const rootName = name ?? root.displayName ?? root.name;
+
+	if (rootName) {
+		root.displayName = rootName;
+		for (const [name, slot] of Object.entries(slots)) {
+			if (typeof slot === "function" && !slot.displayName) {
 				slot.displayName = `${rootName}.${name}`;
+			}
 		}
 	}
 
 	return Object.assign(root, slots);
+}
+
+/**
+ * Utility functions related to slots.
+ * @see {@link createSlots}
+ */
+export namespace Slot {
+	/**
+	 * An empty slot with no content.
+	 * @example
+	 * Using an empty slot to hide the apps in the taskbar:
+	 * ```tsx
+	 * <Taskbar renderApps={Slot.Empty}/>
+	 * ```
+	 */
+	export const Empty: FC = () => null;
+	Empty.displayName = "Empty";
 }
