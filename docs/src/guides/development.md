@@ -152,6 +152,12 @@ API reference generation runs automatically before the `docs:build` task.
 7. Open a [pull request](#pull-requests) and describe your changes and motivation.
 8. Request a review from Prozilla.
 
+::: note Testing and documentation
+
+If you are adding to the public API surface (e.g., a new exported function or class), make sure you also add new tests and some documentation.
+
+:::
+
 ## Support
 
 If you have questions or need help, reach out to the community on [Discord](https://discord.gg/JwbyQP4tdz).

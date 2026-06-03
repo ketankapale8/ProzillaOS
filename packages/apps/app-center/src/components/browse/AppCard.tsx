@@ -1,5 +1,6 @@
 import { Image } from "@prozilla-os/core";
 import { type RegistryEntrySnapshot } from "../../core/appRegistry";
+import { InstallButton } from "../InstallButton";
 import styles from "./AppCard.module.css";
 
 interface AppCardProps {
@@ -24,20 +25,12 @@ export function AppCard({ entry, onOpen, onInstall, onUninstall }: AppCardProps)
 			{category != null && <p className={styles.AppCategory}>{category}</p>}
 		</div>
 		<div className={styles.AppActions} onClick={(event) => { event.stopPropagation(); }}>
-			{isInstalled
-				? <button
-					className={`${styles.InstallButton} ${styles.Installed}`}
-					onClick={onUninstall}
-				>
-					Uninstall
-				</button>
-				: <button
-					className={`${styles.InstallButton} ${styles.NotInstalled}`}
-					onClick={onInstall}
-				>
-					Install
-				</button>
-			}
+			<InstallButton
+				isInstalled={isInstalled}
+				onInstall={onInstall}
+				onUninstall={onUninstall}
+				variant="card"
+			/>
 		</div>
 	</div>;
 }

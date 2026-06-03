@@ -70,30 +70,3 @@
 .AppActions {
 	flex-shrink: 0;
 }
-
-.InstallButton {
-	padding: 0.25rem 1rem;
-	border-radius: var(--border-radius-99);
-	font-size: 0.75rem;
-	font-weight: 600;
-	border: none;
-	cursor: pointer;
-	transition: background-color var(--transition-duration-0) var(--ease-in-out-default);
-}
-
-.InstallButton.Installed {
-	background-color: var(--background-color-2);
-	color: var(--foreground-color-0);
-}
-
-.InstallButton.Installed:hover {
-	background-color: var(--red-0);
-}
-
-.InstallButton.NotInstalled {
-	background-color: var(--blue-0);
-}
-
-.InstallButton.NotInstalled:hover {
-	background-color: var(--blue-1);
-}

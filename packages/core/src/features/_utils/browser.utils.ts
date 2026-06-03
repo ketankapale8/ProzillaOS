@@ -20,15 +20,6 @@ export function reloadViewport() {
 	window.location.reload();
 }
 
-export function isValidUrl(string: string): boolean {
-	try {
-		new URL(string);
-		return true;
-	} catch (_error) {
-		return false;
-	}
-}
-
 export function setViewportTitle(title: string) {
 	document.title = title;
 
@@ -107,14 +98,6 @@ export function generateUrl(options?: GenerateUrlParams) {
 
 export function openUrl(url: string, target?: HTMLAttributeAnchorTarget) {
 	window.open(url, target ?? "_blank");
-}
-
-export function removeUrlProtocol(url: string) {
-	return url.replace(/^https?:\/\/|\/$/g, "");
-}
-
-export function removeBaseUrl(url: string) {
-	return url.replace(/^https?:\/\/[a-z]+(\.[0-9a-z-]+)+/g, "");
 }
 
 export function copyToClipboard(string: string, onSuccess?: (value: void) => void, onFail?: (value: void) => void) {

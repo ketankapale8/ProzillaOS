@@ -2,12 +2,10 @@ import { defineConfig } from "vite";
 import { resolve } from "node:path";
 import dts from "vite-plugin-dts";
 import { externalizeDeps } from "vite-plugin-externalize-deps";
-import react from "@vitejs/plugin-react-swc";
 
 // https://vitejs.dev/config/
 export default defineConfig({
 	plugins: [
-		react(),
 		dts({
 			include: ["src"],
 			outDir: "dist",

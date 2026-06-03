@@ -1,6 +1,6 @@
 import { test as base } from "vitest";
 import { extend } from "@prozilla-os/dev-tools";
-import { fillTemplate, isolate, kebabToCamelCase, parseBool, resolveUrl, splitAt } from "../../../src/features";
+import { capitalize, fillTemplate, isolateSubstring, kebabToCamelCase, parseBool, resolveUrl, splitAt } from "../../../src/features";
 
 const test = extend(base);
 
@@ -68,7 +68,7 @@ test.cases(fillTemplate, [
 	[["{base}{path}", { subdomain: "os", base: "https://{domain}", domain: "{subdomain}.prozilla.dev", path: "foo/bar" }, { join: "/" }], "https://os.prozilla.dev/foo/bar"],
 ]);
 
-test.cases(isolate, [
+test.cases(isolateSubstring, [
 	[["onetwothree", "two"], ["one", "two", "three"]],
 	[["onefootwobarthreefoo", "foo"], ["one", "foo", "twobarthree", "foo"]],
 	[["foofoofoo", "foo"], ["foo", "foo", "foo"]],
@@ -76,4 +76,17 @@ test.cases(isolate, [
 	[["foo", "bar"], ["foo"]],
 	[["", ""], [""]],
 	[["", "foo"], [""]],
+]);
+
+test.simpleCases(capitalize, [
+	["foo", "Foo"],
+	["Foo", "Foo"],
+	["foobar", "Foobar"],
+	["fooBar", "FooBar"],
+	["FooBar", "FooBar"],
+	["fooBAR", "FooBAR"],
+	["FOO", "FOO"],
+	["", ""],
+	["a", "A"],
+	["A", "A"],
 ]);

@@ -31,4 +31,6 @@ test.cases(mergeDeep, [
 	[[{ a: "b", c: "d", e: 6 }, {}], { a: "b", c: "d", e: 6 }],
 	[[{ a: "b", c: "d", e: 6 }, { e: null }], { a: "b", c: "d", e: null }],
 	[[{ a: "b", c: "d", e: 6 }, { e: 5 }], { a: "b", c: "d", e: 5 }],
+	[[{ foo: undefined }, { foo: "bar" }], { foo: "bar" }],
+	[[{ nested: { a: 1, b: "hello" } }, { nested: { a: 2, c: true } }], { nested: { a: 2, b: "hello", c: true } }],
 ]);

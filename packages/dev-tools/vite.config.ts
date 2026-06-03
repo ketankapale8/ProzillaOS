@@ -22,6 +22,7 @@ export default defineConfig({
 				main: resolve(__dirname, "src/main.ts"),
 				test: resolve(__dirname, "src/features/test.ts"),
 				vite: resolve(__dirname, "src/plugins/index.ts"),
+				prompts: resolve(__dirname, "src/features/prompts/index.ts"),
 			},
 			formats: ["es"],
 		},

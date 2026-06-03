@@ -85,7 +85,7 @@ You can find a list of all packages related to ProzillaOS in [packages/README.md
 - [Custom app guide](https://os.prozilla.dev/docs/guides/custom-app)
 - [Self-hosting guide](https://os.prozilla.dev/docs/guides/self-hosting)
 - [Development guide](https://os.prozilla.dev/docs/guides/development)
-- [Contributing](CONTRIBUTING.md)
+- [Contributing guide](CONTRIBUTING.md)
 - [ProzillaOS boilerplate][boilerplate]
 
 ## License

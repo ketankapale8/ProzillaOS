@@ -6,16 +6,16 @@ This is an overview of all packages related to ProzillaOS. Each package is publi
 
 This bundle lets you quickly get started with ProzillaOS without the hassle of installing all packages individually.
 
-- [`prozilla-os`](./prozilla-os/): A bundle containing `@prozilla-os/core`, `@prozilla-os/shared` and all primary applications of ProzillaOS
+- [`prozilla-os`](./prozilla-os/): A bundle containing `@prozilla-os/core`, `@prozilla-os/shared` and all [primary applications](#primary-applications) of ProzillaOS.
 
 ## Libraries
 
 These libraries are different modules of ProzillaOS that can be installed separately. `@prozilla-os/core` and `@prozilla-os/shared` are also included in the `prozilla-os` bundle.
 
-- [`@prozilla-os/core`](./core/): Core functionality, React components and hooks
-- [`@prozilla-os/skins`](./skins/): Customizable skins for ProzillaOS
-- [`@prozilla-os/shared`](./shared/): Shared functions and utilities
-- [`@prozilla-os/dev-tools`](./dev-tools/): Tools for development of ProzillaOS packages
+- [`@prozilla-os/core`](./core/): Core functionality of ProzillaOS, with React components, hooks and a router.
+- [`@prozilla-os/skins`](./skins/): Customizable skins for ProzillaOS that can override content and layout and dynamically load CSS.
+- [`@prozilla-os/shared`](./shared/): Common generic TypeScript functions and utilities (e.g., data manipulation, logging), not directly related to ProzillaOS.
+- [`@prozilla-os/dev-tools`](./dev-tools/): Tools for the development of anything related to ProzillaOS (e.g., ProzillaOS websites, ProzillaOS apps). Used extensively for the development of official ProzillaOS packages (e.g., shared configurations, testing utilities).
 
 ## Applications
 

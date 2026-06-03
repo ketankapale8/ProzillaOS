@@ -25,11 +25,22 @@ export function randomRange(min: number, max: number): number {
 }
 
 /**
+ * Returns a random integer inside a range.
+ * @param min - The lower bound (inclusive).
+ * @param max - The upper bound (exclusive).
+ */
+export function randomInt(min: number, max: number): number {
+	min = Math.ceil(min);
+	max = Math.floor(max);
+	return Math.floor(Math.random() * (max - min)) + min;
+}
+
+/**
  * Rounds a value.
  * @param value - The value to round.
  * @param precision - The precision to round with.
  */
-export function round(value: number, precision?: number): number {
-	const factor = Math.pow(10, precision ?? 0);
+export function round(value: number, precision: number = 0): number {
+	const factor = Math.pow(10, precision);
 	return Math.round(value * factor) / factor;
 }

@@ -83,29 +83,6 @@
 	margin-top: 0.5rem;
 }
 
-.ActionButton button {
-	padding: 0.75rem 2.5rem;
-	border-radius: var(--border-radius-99);
-	font-size: 1rem;
-	font-weight: 600;
-}
-
-.InstallButton {
-	--normal-color: var(--blue-0);
-	--hover-color: var(--blue-1);
-	color: var(--foreground-color-0);
-}
-
-.UninstallButton {
-	--normal-color: var(--background-color-2);
-	--hover-color: var(--red-0);
-	color: var(--foreground-color-0);
-}
-
-.UninstallButton:hover {
-	color: var(--foreground-color-0);
-}
-
 .ContentSection {
 	flex: 1;
 	padding: 1.5rem 2rem;

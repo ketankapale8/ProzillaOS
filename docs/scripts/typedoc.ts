@@ -5,7 +5,7 @@ import { resolve } from "node:path";
 import { formatPackageName, OUT_DIR, PACKAGE_PATHS, PACKAGE_PREFIX, packagePathToName, PACKAGES_DIR } from "./packages.utils.mjs";
 import { Option, program } from "@commander-js/extra-typings";
 import { formatMemberPageTitle, formatModulePageTitle } from "./typedoc.utils";
-import { Logger } from "@prozilla-os/shared";
+import { Logger } from "@prozilla-os/shared/logging";
 
 const DEFAULT_OPTIONS: TypeDocOptions & PluginOptions = {
 	plugin: [

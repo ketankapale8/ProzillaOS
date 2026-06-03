@@ -2,9 +2,9 @@ import { MouseEventHandler, ReactNode, useMemo } from "react";
 import { faClipboard, faExternalLink } from "@fortawesome/free-solid-svg-icons";
 import { MarkdownProps } from "../TextEditor";
 import styles from "../TextEditor.module.css";
-import { Actions, ClickAction, copyToClipboard, DialogBox, ModalProps, ModalsConfig, removeUrlProtocol, TextDisplay, useContextMenu, useWindowedModal } from "@prozilla-os/core";
+import { Actions, ClickAction, copyToClipboard, DialogBox, ModalProps, ModalsConfig, TextDisplay, useContextMenu, useWindowedModal } from "@prozilla-os/core";
 import { sanitizeProps } from "../../core/_utils/sanitizeProps";
-import { Vector2 } from "@prozilla-os/shared";
+import { removeUrlProtocol, Vector2 } from "@prozilla-os/shared";
 
 interface MarkdownLinkProps extends MarkdownProps {
 	href: string;

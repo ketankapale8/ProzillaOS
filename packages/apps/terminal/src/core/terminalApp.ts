@@ -9,19 +9,19 @@ export class TerminalApp extends App<TerminalProps> {
 		this.setIconUrl("https://os.prozilla.dev/assets/apps/icons/terminal.svg");
 		this.setRole(AppsConfig.APP_ROLES.terminal);
 		this.setCategory("Utilities & tools");
-		this.setSkinOverride(MacOsSkin, { 
+		this.addSkinOverride(MacOsSkin, { 
 			name: "Terminal", 
-			iconUrl: `{${Skin.TEMPLATE_KEYS.baseUrl}}/assets/skins/mac/apps/icons/terminal.svg`,
+			iconUrl: Skin.assetUrl("/assets/skins/mac/apps/icons/terminal.svg"),
 		});
-		this.setSkinOverride(Windows95Skin, { 
+		this.addSkinOverride(Windows95Skin, { 
 			name: "MS-DOS Prompt", 
-			iconUrl: `{${Skin.TEMPLATE_KEYS.baseUrl}}/assets/skins/windows95/apps/icons/terminal.svg`,
+			iconUrl: Skin.assetUrl("/assets/skins/windows95/apps/icons/terminal.svg"),
 		});
-		this.setSkinOverride(MinimalSkin, { 
-			iconUrl: `{${Skin.TEMPLATE_KEYS.baseUrl}}/assets/skins/minimal/apps/icons/terminal.svg`,
+		this.addSkinOverride(MinimalSkin, { 
+			iconUrl: Skin.assetUrl("/assets/skins/minimal/apps/icons/terminal.svg"),
 		});
-		this.setSkinOverride(PixelSkin, { 
-			iconUrl: `{${Skin.TEMPLATE_KEYS.baseUrl}}/assets/skins/pixel/apps/icons/terminal.png`,
+		this.addSkinOverride(PixelSkin, { 
+			iconUrl: Skin.assetUrl("/assets/skins/pixel/apps/icons/terminal.png"),
 		});
 	}
 

@@ -13,7 +13,15 @@ export function removeFromArray<Type>(item: Type, array: Type[]) {
  * Returns a random item from an array.
  */
 export function randomFromArray<Type>(array: Type[]): Type {
-	return array[Math.floor(Math.random() * array.length)];
+	return array[randomIndex(array)];
+}
+
+/**
+ * Returns a random index within the bounds of an array.
+ * @returns A random index.
+ */
+export function randomIndex(array: unknown[]) {
+	return Math.floor(Math.random() * array.length);
 }
 
 /**

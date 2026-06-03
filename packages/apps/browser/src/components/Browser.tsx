@@ -2,8 +2,9 @@ import { ChangeEventHandler, KeyboardEventHandler, useEffect, useRef, useState }
 import styles from "./Browser.module.css";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCaretLeft, faCaretRight, faHome, faRotateRight } from "@fortawesome/free-solid-svg-icons";
-import { isValidUrl, useHistory, WebView, WindowProps } from "@prozilla-os/core";
+import { useHistory, WebView, WindowProps } from "@prozilla-os/core";
 import { HOME_URL, SEARCH_URL } from "../constants/browser.const";
+import { isValidUrl } from "@prozilla-os/shared";
 
 export interface BrowserProps extends WindowProps {
 	url?: string;

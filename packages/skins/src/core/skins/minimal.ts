@@ -6,12 +6,12 @@ import { Skin, SkinOptions } from "../skin";
 export class MinimalSkin extends Skin {
 	public static override DEFAULTS: SkinOptions = {
 		...super.DEFAULTS,
-		defaultWallpaper: `{${super.TEMPLATE_KEYS.baseUrl}}/assets/wallpapers/abstract-wallpaper-mesh-gradient-cyan.png`,
+		defaultWallpaper: Skin.assetUrl("/assets/wallpapers/abstract-wallpaper-mesh-gradient-cyan.png"),
 		fileIcons: {
-			generic: `{${super.TEMPLATE_KEYS.baseUrl}}/assets/skins/minimal/apps/file-explorer/file.svg`,
+			generic: Skin.assetUrl("/assets/skins/minimal/apps/file-explorer/file.svg"),
 		},
 		folderIcons: {
-			generic: `{${super.TEMPLATE_KEYS.baseUrl}}/assets/skins/minimal/apps/file-explorer/folder.svg`,
+			generic: Skin.assetUrl("/assets/skins/minimal/apps/file-explorer/folder.svg"),
 		},
 		loadStyleSheet: () => {
 			void import("../../styles/skins/minimal.css");

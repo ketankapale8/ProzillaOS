@@ -6,19 +6,19 @@ const fileExplorer = new App<FileExplorerProps>("File Explorer", "file-explorer"
 	.setIconUrl("https://os.prozilla.dev/assets/apps/icons/file-explorer.svg")
 	.setRole(AppsConfig.APP_ROLES.fileExplorer)
 	.setCategory("Utilities & tools")
-	.setSkinOverride(MacOsSkin, { 
+	.addSkinOverride(MacOsSkin, { 
 		name: "Finder", 
-		iconUrl: `{${Skin.TEMPLATE_KEYS.baseUrl}}/assets/skins/mac/apps/icons/file-explorer.svg`,
+		iconUrl: Skin.assetUrl("/assets/skins/mac/apps/icons/file-explorer.svg"),
 	})
-	.setSkinOverride(Windows95Skin, { 
+	.addSkinOverride(Windows95Skin, { 
 		name: "Windows Explorer", 
-		iconUrl: `{${Skin.TEMPLATE_KEYS.baseUrl}}/assets/skins/windows95/apps/icons/file-explorer.svg`,
+		iconUrl: Skin.assetUrl("/assets/skins/windows95/apps/icons/file-explorer.svg"),
 	})
-	.setSkinOverride(MinimalSkin, { 
-		iconUrl: `{${Skin.TEMPLATE_KEYS.baseUrl}}/assets/skins/minimal/apps/icons/file-explorer.svg`,
+	.addSkinOverride(MinimalSkin, { 
+		iconUrl: Skin.assetUrl("/assets/skins/minimal/apps/icons/file-explorer.svg"),
 	})
-	.setSkinOverride(PixelSkin, { 
-		iconUrl: `{${Skin.TEMPLATE_KEYS.baseUrl}}/assets/skins/pixel/apps/icons/file-explorer.png`,
+	.addSkinOverride(PixelSkin, { 
+		iconUrl: Skin.assetUrl("/assets/skins/pixel/apps/icons/file-explorer.png"),
 	});
 
 export { fileExplorer, FileExplorerProps };

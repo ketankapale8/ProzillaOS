@@ -5,6 +5,11 @@ export function isObject(arg: unknown): arg is Record<PropertyKey, unknown> {
 	return arg != null && typeof arg === "object" && !Array.isArray(arg);
 }
 
+/**
+ * Merges the type of the target with one or more types of sources.
+ * @typeParam Target - The target type to merge with.
+ * @typeParam Sources - The source types to merge into the target type.
+ */
 export type Merge<Target, Sources extends unknown[]> = Sources extends []
 	? Target
 	: Sources extends [infer FirstSource, ...infer OtherSources]
@@ -13,15 +18,25 @@ export type Merge<Target, Sources extends unknown[]> = Sources extends []
 			? Target | MergeValues<Target, Source>
 			: never;
 
+/**
+ * Merges the types of two primitive values.
+ */
 export type MergePrimitive<Target, Source> = undefined extends Source
 	? Exclude<Source, undefined> extends never
 		? Target
 		: Exclude<Source, undefined>
 	: Source;
 
-export type MergeValues<Target, Source, OptionalSource extends boolean = false> = Target extends Record<PropertyKey, unknown>
+/**
+ * Merges the types of two values recursively.
+ * 
+ * Delegates to {@link MergePrimitive}, {@link MergeObjects} or {@link MergeArrays} if the two values are primitives, objects or arrays respectively.
+ */
+export type MergeValues<Target, Source> = Target extends Record<PropertyKey, unknown>
 	? Source extends Record<PropertyKey, unknown>
-		? MergeObjects<Target, Source, OptionalSource>
+		? [Target, Source] extends [Source, Target]
+			? Target
+			: MergeObjects<Target, Source>
 		: Source
 	: Target extends unknown[]
 		? Source extends unknown[]
@@ -29,22 +44,22 @@ export type MergeValues<Target, Source, OptionalSource extends boolean = false> 
 			: Source
 		: MergePrimitive<Target, Source>;
 
-export type MergeObjects<Target, Source, OptionalSource extends boolean = false> = OptionalSource extends true
-	? {
-		[Key in keyof Target]: Key extends keyof Source
-			? Target[Key] | MergeValues<Target[Key], Source[Key], OptionalSource>
-			: Target[Key]
-	} & {
-		[Key in keyof Source as Key extends keyof Target ? never : Key]?: Source[Key]
-	}
-	: {
-		[Key in keyof Target | keyof Source]: Key extends keyof Source
-			? Key extends keyof Target
-				? MergeValues<Target[Key], Source[Key]>
-				: Source[Key]
-			: Target[Key & keyof Target]
-	};
+/**
+ * Merges the types of two objects recursively.
+ * 
+ * Properties are merged using {@link MergeValues}.
+ */
+export type MergeObjects<Target extends Record<PropertyKey, unknown>, Source extends Record<PropertyKey, unknown>> = {
+	[Key in keyof Target | keyof Source]: Key extends keyof Source
+		? Key extends keyof Target
+			? MergeValues<Target[Key], Source[Key]>
+			: Source[Key]
+		: Target[Key & keyof Target]
+};
 
+/**
+ * Merges the types of two arrays by concatenating them.
+ */
 export type MergeArrays<Target extends unknown[], Source extends unknown[]> = [...Target, ...Source];
 
 /**
@@ -56,8 +71,8 @@ export type MergeArrays<Target extends unknown[], Source extends unknown[]> = [.
  * @param sources - The objects to merge with the target object.
  * @returns The merged object.
  */
-export function mergeDeep<Target extends Record<PropertyKey, unknown>, Sources extends Record<PropertyKey, unknown>[]>(target: Target, ...sources: Sources): Merge<Target, Sources> {
-	const result: Target | Merge<Target, Sources> = { ...target };
+export function mergeDeep<Target extends Record<PropertyKey, unknown>, Sources extends Record<PropertyKey, unknown>[] = Target[]>(target: Target, ...sources: Sources): Merge<Target, Sources> {
+	const result: Record<PropertyKey, unknown> = { ...target };
 	
 	for (const source of sources) {
 		for (const key in source) {

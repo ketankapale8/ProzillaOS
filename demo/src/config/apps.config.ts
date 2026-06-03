@@ -36,41 +36,41 @@ export const appsConfig = new AppsConfig({
 			.setDescription(`Browse and install ${NAME} apps.`)
 			.setPinnedByDefault(false),
 		wordle.setIconUrl("/assets/apps/icons/wordle.svg")
-			.setSkinOverride(MacOsSkin, {
-				iconUrl: `{${Skin.TEMPLATE_KEYS.baseUrl}}/assets/skins/mac/apps/icons/wordle.svg`,
+			.addSkinOverride(MacOsSkin, {
+				iconUrl: Skin.assetUrl("/assets/skins/mac/apps/icons/wordle.svg"),
 			})
-			.setSkinOverride(MinimalSkin, {
-				iconUrl: `{${Skin.TEMPLATE_KEYS.baseUrl}}/assets/skins/minimal/apps/icons/wordle.svg`,
+			.addSkinOverride(MinimalSkin, {
+				iconUrl: Skin.assetUrl("/assets/skins/minimal/apps/icons/wordle.svg"),
 			})
-			.setSkinOverride(PixelSkin, {
-				iconUrl: `{${Skin.TEMPLATE_KEYS.baseUrl}}/assets/skins/pixel/apps/icons/wordle.png`,
+			.addSkinOverride(PixelSkin, {
+				iconUrl: Skin.assetUrl("/assets/skins/pixel/apps/icons/wordle.png"),
 			})
 			.setPinnedByDefault(false)
 			.setShowDesktopIcon(true),
 		ballMaze.setIconUrl("/assets/apps/icons/ball-maze.svg")
-			.setSkinOverride(MacOsSkin, {
-				iconUrl: `{${Skin.TEMPLATE_KEYS.baseUrl}}/assets/skins/mac/apps/icons/ball-maze.svg`,
+			.addSkinOverride(MacOsSkin, {
+				iconUrl: Skin.assetUrl("/assets/skins/mac/apps/icons/ball-maze.svg"),
 			})
-			.setSkinOverride(MinimalSkin, {
-				iconUrl: `{${Skin.TEMPLATE_KEYS.baseUrl}}/assets/skins/minimal/apps/icons/ball-maze.svg`,
+			.addSkinOverride(MinimalSkin, {
+				iconUrl: Skin.assetUrl("/assets/skins/minimal/apps/icons/ball-maze.svg"),
 			})
-			.setSkinOverride(PixelSkin, {
-				iconUrl: `{${Skin.TEMPLATE_KEYS.baseUrl}}/assets/skins/pixel/apps/icons/ball-maze.png`,
+			.addSkinOverride(PixelSkin, {
+				iconUrl: Skin.assetUrl("/assets/skins/pixel/apps/icons/ball-maze.png"),
 			})
 			.setPinnedByDefault(false)
 			.setShowDesktopIcon(true),
 		minesweeper.setIconUrl("/assets/apps/icons/minesweeper.svg")
-			.setSkinOverride(MacOsSkin, {
-				iconUrl: `{${Skin.TEMPLATE_KEYS.baseUrl}}/assets/skins/mac/apps/icons/minesweeper.svg`,
+			.addSkinOverride(MacOsSkin, {
+				iconUrl: Skin.assetUrl("/assets/skins/mac/apps/icons/minesweeper.svg"),
 			})
-			.setSkinOverride(Windows95Skin, {
-				iconUrl: `{${Skin.TEMPLATE_KEYS.baseUrl}}/assets/skins/windows95/apps/icons/minesweeper.svg`,
+			.addSkinOverride(Windows95Skin, {
+				iconUrl: Skin.assetUrl("/assets/skins/windows95/apps/icons/minesweeper.svg"),
 			})
-			.setSkinOverride(MinimalSkin, {
-				iconUrl: `{${Skin.TEMPLATE_KEYS.baseUrl}}/assets/skins/minimal/apps/icons/minesweeper.svg`,
+			.addSkinOverride(MinimalSkin, {
+				iconUrl: Skin.assetUrl("/assets/skins/minimal/apps/icons/minesweeper.svg"),
 			})
-			.setSkinOverride(PixelSkin, {
-				iconUrl: `{${Skin.TEMPLATE_KEYS.baseUrl}}/assets/skins/pixel/apps/icons/minesweeper.png`,
+			.addSkinOverride(PixelSkin, {
+				iconUrl: Skin.assetUrl("/assets/skins/pixel/apps/icons/minesweeper.png"),
 			})
 			.setPinnedByDefault(false)
 			.setShowDesktopIcon(true),

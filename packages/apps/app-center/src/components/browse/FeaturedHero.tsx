@@ -1,5 +1,6 @@
-import { Image, Button } from "@prozilla-os/core";
+import { Image } from "@prozilla-os/core";
 import { type RegistryEntrySnapshot } from "../../core/appRegistry";
+import { InstallButton } from "../InstallButton";
 import styles from "./FeaturedHero.module.css";
 
 interface FeaturedHeroProps {
@@ -24,10 +25,12 @@ export function FeaturedHero({ entry, onInstall, onUninstall, onOpen }: Featured
 			</p>
 		</div>
 		<div className={styles.HeroButton} onClick={(event) => { event.stopPropagation(); }}>
-			{isInstalled
-				? <Button onClick={onUninstall}>Uninstall</Button>
-				: <Button onClick={onInstall}>Install</Button>
-			}
+			<InstallButton
+				isInstalled={isInstalled}
+				onInstall={onInstall}
+				onUninstall={onUninstall}
+				variant="hero"
+			/>
 		</div>
 	</div>;
 }

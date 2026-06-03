@@ -1,7 +1,7 @@
 import { WindowProps } from "../../components";
 import { FC } from "react";
 import { APP_CATEGORIES } from "../../constants/apps.const";
-import { Vector2 } from "@prozilla-os/shared";
+import { mergeDeep, Vector2 } from "@prozilla-os/shared";
 import { Skin } from "@prozilla-os/skins";
 
 const validIdRegex = /^[a-zA-Z0-9-]+$/;
@@ -26,6 +26,7 @@ export interface DefaultWindowOptions {
 	[key: string]: unknown;
 }
 
+/** @interface */
 export type AppSkinOverrides<AppProps extends WindowProps = WindowProps> = Partial<Pick<App<AppProps>, "name" | "description" | "windowContent" | "windowOptions" | "iconUrl" | "metadata">>;
 
 /**
@@ -103,6 +104,15 @@ export class App<AppProps extends WindowProps = WindowProps> {
 	 */
 	showDesktopIcon: boolean = false;
 
+	/**
+	 * Defines the overrides to apply to this app based on the current skin.
+	 * 
+	 * For each entry, if the key is (a subclass of) the current type of skin, the overrides are applied to this app.
+	 * If multiple entries match the current skin, they are merged.
+	 * 
+	 * @see {@link setSkinOverrides}
+	 * @see {@link addSkinOverride}
+	 */
 	public skinOverrides?: Map<typeof Skin, AppSkinOverrides<AppProps>>;
 
 	isActive: boolean = false;
@@ -228,15 +238,29 @@ export class App<AppProps extends WindowProps = WindowProps> {
 		return this;
 	}
 
+	/**
+	 * Replaces any existing skin overrides with the given overrides.
+	 * @param skinOverrides - The skin overrides to assign to this app.
+	 * @see {@link skinOverrides}
+	 */
 	setSkinOverrides(skinOverrides: App<AppProps>["skinOverrides"]): this {
 		this.skinOverrides = skinOverrides;
 		return this;
 	}
 
-	setSkinOverride(skin: typeof Skin, overrides: AppSkinOverrides<AppProps>): this {
+	/**
+	 * Adds skin overrides to this app.
+	 * 
+	 * If there is already an existing entry for the same skin, it is merged with the new overrides.
+	 * 
+	 * @see {@link skinOverrides}
+	 */
+	addSkinOverride(skin: typeof Skin, overrides: AppSkinOverrides<AppProps>): this {
 		if (!this.skinOverrides)
 			this.skinOverrides = new Map();
-		this.skinOverrides.set(skin, overrides);
+		const existingOverrides = this.skinOverrides.get(skin);
+		const mergedOverrides = existingOverrides ? mergeDeep(existingOverrides, overrides) : overrides;
+		this.skinOverrides.set(skin, mergedOverrides);
 		return this;
 	}
 

@@ -5,8 +5,9 @@ import { AppCard } from "./AppCard";
 import { DetailView } from "../detail/DetailView";
 import styles from "./BrowseView.module.css";
 import { type CategoryType } from "../AppCenter";
+import { randomIndex } from "@prozilla-os/shared";
+import { useMemo } from "react";
 import { useSingleton } from "@prozilla-os/core";
-import { randomFromArray } from "@prozilla-os/shared";
 
 interface BrowseViewProps {
 	searchQuery: string;
@@ -31,7 +32,8 @@ export function BrowseView({
 	onInstall,
 	onUninstall,
 }: BrowseViewProps) {
-	const featuredApp = useSingleton(() => entries.length ? randomFromArray([...entries]) : null);
+	const featuredAppIndex = useSingleton(() => randomIndex([...entries]));
+	const featuredApp = useMemo(() => entries.length ? entries[featuredAppIndex] : null, [entries]);
 
 	if (selectedEntry != null) {
 		return <DetailView

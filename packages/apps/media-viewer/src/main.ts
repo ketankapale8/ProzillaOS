@@ -7,19 +7,19 @@ const mediaViewer = new App<MediaViewerProps>("Media Viewer", "media-viewer", Me
 	.setRole(AppsConfig.APP_ROLES.mediaViewer)
 	.setAssociatedExtensions(MEDIA_EXTENSIONS)
 	.setCategory("Photo & video")
-	.setSkinOverride(MacOsSkin, { 
+	.addSkinOverride(MacOsSkin, { 
 		name: "Photos", 
-		iconUrl: `{${Skin.TEMPLATE_KEYS.baseUrl}}/assets/skins/mac/apps/icons/media-viewer.svg`,
+		iconUrl: Skin.assetUrl("/assets/skins/mac/apps/icons/media-viewer.svg"),
 	})
-	.setSkinOverride(Windows95Skin, { 
+	.addSkinOverride(Windows95Skin, { 
 		name: "Imaging", 
-		iconUrl: `{${Skin.TEMPLATE_KEYS.baseUrl}}/assets/skins/windows95/apps/icons/media-viewer.svg`,
+		iconUrl: Skin.assetUrl("/assets/skins/windows95/apps/icons/media-viewer.svg"),
 	})
-	.setSkinOverride(MinimalSkin, { 
-		iconUrl: `{${Skin.TEMPLATE_KEYS.baseUrl}}/assets/skins/minimal/apps/icons/media-viewer.svg`,
+	.addSkinOverride(MinimalSkin, { 
+		iconUrl: Skin.assetUrl("/assets/skins/minimal/apps/icons/media-viewer.svg"),
 	})
-	.setSkinOverride(PixelSkin, { 
-		iconUrl: `{${Skin.TEMPLATE_KEYS.baseUrl}}/assets/skins/pixel/apps/icons/media-viewer.png`,
+	.addSkinOverride(PixelSkin, { 
+		iconUrl: Skin.assetUrl("/assets/skins/pixel/apps/icons/media-viewer.png"),
 	});
 
 export { mediaViewer, MediaViewerProps };

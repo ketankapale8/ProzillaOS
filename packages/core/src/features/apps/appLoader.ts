@@ -1,6 +1,6 @@
 import { App } from "./app";
-import { isValidUrl } from "../_utils";
 import { WindowProps } from "../../components";
+import { isValidUrl } from "@prozilla-os/shared";
 
 export interface LoadAppOptions {
 	/**

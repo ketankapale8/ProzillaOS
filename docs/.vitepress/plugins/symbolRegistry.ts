@@ -1,6 +1,6 @@
 import { existsSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { Logger } from "@prozilla-os/shared";
+import { Logger } from "@prozilla-os/shared/logging";
 import type { NavigationJSON } from "typedoc-plugin-markdown";
 import { PACKAGE_PATHS, packagePathToId } from "../packages.config";
 

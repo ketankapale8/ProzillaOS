@@ -43,43 +43,6 @@ export function splitAt(string: string, index: number): [string, string] {
 	return [string.slice(0, index), string.slice(index + 1)];
 }
 
-/**
- * Combines an array of URL segments into a URL string.
- * @param segments - The segments of the URL.
- * @returns The combined URL.
- */
-export function resolveUrl(...segments: string[]) {
-	let path = "";
-	const parameters = new Map<string, string>();
-
-	for (const segment of segments) {
-		const [pathSegment, parametersSegment] = splitAt(segment, segment.indexOf("?"));
-
-		if (pathSegment.length) {
-			if (!path.length) {
-				path += pathSegment;
-			} else if (path.endsWith("/")) {
-				path += pathSegment.replace(/^\//, "");
-			} else {
-				if (!pathSegment.startsWith("/"))
-					path += "/";
-				path += pathSegment;
-			}
-		}
-
-		if (parametersSegment.length) {
-			for (const parameter of parametersSegment.split(/[?&]/)) {
-				const [key, value] = splitAt(parameter, parameter.indexOf("="));
-				parameters.set(key, value);
-			}
-		}
-	}
-
-	if (parameters.size)
-		path += "?" + parameters.entries().map(([key, value]) => `${key}=${value}`).toArray().join("&");
-	return path;
-}
-
 export function fillTemplate(template: string, properties: Record<string, string>, options: { join: false }): string[]
 export function fillTemplate(template: string, properties: Record<string, string>, options?: { join?: true | string }): string
 export function fillTemplate(template: string, properties: Record<string, string>, options: { join?: boolean | string } = {}): string[] | string {
@@ -103,7 +66,7 @@ export function fillTemplate(template: string, properties: Record<string, string
 				continue;
 
 			segments = replaceAll(
-				segments.flatMap((segment) => isolate(segment, placeholder)),
+				segments.flatMap((segment) => isolateSubstring(segment, placeholder)),
 				placeholder,
 				resolve(key)
 			);
@@ -126,7 +89,18 @@ export function fillTemplate(template: string, properties: Record<string, string
  * @param searchValue - The value to isolate from other substrings.
  * @returns An array of substrings matching {@link searchValue} and the rest of the string.
  */
-export function isolate(string: string, searchValue: string) {
+export function isolateSubstring(string: string, searchValue: string) {
 	if (string === "") return [""];
 	return interleave(searchValue, string.split(searchValue)).filter((item) => item.length);
+}
+
+/**
+ * Transforms the first character of a string to uppercase.
+ * @param string - The string to capitalize.
+ * @returns The string with the first character transformed to uppercase.
+ */
+export function capitalize<S extends string = string>(string: S): Capitalize<S> {
+	return (string.length <= 1
+		? string.toUpperCase()
+		: string.charAt(0).toUpperCase() + string.slice(1)) as Capitalize<S>;
 }

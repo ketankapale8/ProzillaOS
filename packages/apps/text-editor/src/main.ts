@@ -6,19 +6,19 @@ const textEditor = new App<TextEditorProps>("Text Editor", "text-editor", TextEd
 	.setIconUrl("https://os.prozilla.dev/assets/apps/icons/text-editor.svg")
 	.setRole(AppsConfig.APP_ROLES.textEditor)
 	.setCategory("Utilities & tools")
-	.setSkinOverride(MacOsSkin, { 
+	.addSkinOverride(MacOsSkin, { 
 		name: "Notes", 
-		iconUrl: `{${Skin.TEMPLATE_KEYS.baseUrl}}/assets/skins/mac/apps/icons/text-editor.svg`,
+		iconUrl: Skin.assetUrl("/assets/skins/mac/apps/icons/text-editor.svg"),
 	})
-	.setSkinOverride(Windows95Skin, { 
+	.addSkinOverride(Windows95Skin, { 
 		name: "Notepad", 
-		iconUrl: `{${Skin.TEMPLATE_KEYS.baseUrl}}/assets/skins/windows95/apps/icons/text-editor.svg`,
+		iconUrl: Skin.assetUrl("/assets/skins/windows95/apps/icons/text-editor.svg"),
 	})
-	.setSkinOverride(MinimalSkin, { 
-		iconUrl: `{${Skin.TEMPLATE_KEYS.baseUrl}}/assets/skins/minimal/apps/icons/text-editor.svg`,
+	.addSkinOverride(MinimalSkin, { 
+		iconUrl: Skin.assetUrl("/assets/skins/minimal/apps/icons/text-editor.svg"),
 	})
-	.setSkinOverride(PixelSkin, { 
-		iconUrl: `{${Skin.TEMPLATE_KEYS.baseUrl}}/assets/skins/pixel/apps/icons/text-editor.png`,
+	.addSkinOverride(PixelSkin, { 
+		iconUrl: Skin.assetUrl("/assets/skins/pixel/apps/icons/text-editor.png"),
 	});
 
 export { textEditor, TextEditorProps };

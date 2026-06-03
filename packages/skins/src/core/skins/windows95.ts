@@ -7,17 +7,17 @@ import { Skin, SkinOptions } from "../skin";
 export class Windows95Skin extends Skin {
 	public static override DEFAULTS: SkinOptions = {
 		...super.DEFAULTS,
-		systemIcon: `{${super.TEMPLATE_KEYS.baseUrl}}/assets/skins/windows95/system-icon.png`,
+		systemIcon: Skin.assetUrl("/assets/skins/windows95/system-icon.png"),
 		wallpapers: [
-			`{${super.TEMPLATE_KEYS.baseUrl}}/assets/skins/windows95/wallpapers/default.png`,
-			`{${super.TEMPLATE_KEYS.baseUrl}}/assets/skins/windows95/wallpapers/clouds.png`,
+			Skin.assetUrl("/assets/skins/windows95/wallpapers/default.png"),
+			Skin.assetUrl("/assets/skins/windows95/wallpapers/clouds.png"),
 		],
-		defaultWallpaper: `{${super.TEMPLATE_KEYS.baseUrl}}/assets/skins/windows95/wallpapers/default.png`,
+		defaultWallpaper: Skin.assetUrl("/assets/skins/windows95/wallpapers/default.png"),
 		fileIcons: {
-			generic: `{${super.TEMPLATE_KEYS.baseUrl}}/assets/skins/windows95/apps/file-explorer/file.svg`,
+			generic: Skin.assetUrl("/assets/skins/windows95/apps/file-explorer/file.svg"),
 		},
 		folderIcons: {
-			generic: `{${super.TEMPLATE_KEYS.baseUrl}}/assets/skins/windows95/apps/file-explorer/folder.svg`,
+			generic: Skin.assetUrl("/assets/skins/windows95/apps/file-explorer/folder.svg"),
 		},
 		defaultTheme: Theme.Light,
 		loadStyleSheet: () => {

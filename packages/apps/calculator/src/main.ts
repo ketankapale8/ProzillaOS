@@ -7,19 +7,19 @@ const calculator = new App("Calculator", "calculator", Calculator, { size: new V
 	.setIconUrl("https://os.prozilla.dev/assets/apps/icons/calculator.svg")
 	.setPinnedByDefault(false)
 	.setCategory("Utilities & tools")
-	.setSkinOverride(MacOsSkin, { 
+	.addSkinOverride(MacOsSkin, { 
 		name: "Calculator", 
-		iconUrl: `{${Skin.TEMPLATE_KEYS.baseUrl}}/assets/skins/mac/apps/icons/calculator.svg`,
+		iconUrl: Skin.assetUrl("/assets/skins/mac/apps/icons/calculator.svg"),
 	})
-	.setSkinOverride(Windows95Skin, { 
+	.addSkinOverride(Windows95Skin, { 
 		name: "Calculator", 
-		iconUrl: `{${Skin.TEMPLATE_KEYS.baseUrl}}/assets/skins/windows95/apps/icons/calculator.svg`,
+		iconUrl: Skin.assetUrl("/assets/skins/windows95/apps/icons/calculator.svg"),
 	})
-	.setSkinOverride(MinimalSkin, { 
-		iconUrl: `{${Skin.TEMPLATE_KEYS.baseUrl}}/assets/skins/minimal/apps/icons/calculator.svg`,
+	.addSkinOverride(MinimalSkin, { 
+		iconUrl: Skin.assetUrl("/assets/skins/minimal/apps/icons/calculator.svg"),
 	})
-	.setSkinOverride(PixelSkin, { 
-		iconUrl: `{${Skin.TEMPLATE_KEYS.baseUrl}}/assets/skins/pixel/apps/icons/calculator.png`,
+	.addSkinOverride(PixelSkin, { 
+		iconUrl: Skin.assetUrl("/assets/skins/pixel/apps/icons/calculator.png"),
 	});
 
 export { calculator };

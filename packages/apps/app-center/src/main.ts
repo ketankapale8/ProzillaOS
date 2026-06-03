@@ -6,9 +6,9 @@ const appCenter = new App<AppCenterProps>("AppCenter", "app-center", AppCenter)
 	.setIconUrl("https://os.prozilla.dev/assets/apps/icons/app-center.svg")
 	.setPinnedByDefault(true)
 	.setCategory("Utilities & tools")
-	.setSkinOverride(MacOsSkin, { 
+	.addSkinOverride(MacOsSkin, { 
 		name: "App Store",
-		iconUrl: `{${Skin.TEMPLATE_KEYS.baseUrl}}/assets/skins/mac/apps/icons/app-center.svg`,
+		iconUrl: Skin.assetUrl("/assets/skins/mac/apps/icons/app-center.svg"),
 	});
 
 export { appCenter, AppCenterProps, AppCenterTab, CategoryType };

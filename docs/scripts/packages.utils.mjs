@@ -1,4 +1,4 @@
-import { Ansi } from "@prozilla-os/shared";
+import { Ansi } from "@prozilla-os/shared/logging";
 
 // @ts-check
 export const PACKAGES_DIR = "../packages/";

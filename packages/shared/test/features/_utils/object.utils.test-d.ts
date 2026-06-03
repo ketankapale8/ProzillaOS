@@ -1,5 +1,5 @@
 import { describe, test, expectTypeOf } from "vitest";
-import { Merge, MergeValues, MergeObjects, MergeArrays } from "../../../src/features";
+import { Merge, MergeValues, MergeObjects, MergeArrays, mergeDeep } from "../../../src/features";
 
 describe("Merge", () => {
 	test("no sources returns target object", () => {
@@ -84,9 +84,9 @@ describe("MergeValues", () => {
 		expectTypeOf<Result>().toEqualTypeOf<{ install: string; uninstall: string }>();
 	});
 
-	test("overlapping key with undefined default and optional source", () => {
-		type Result = MergeValues<{ foo: undefined }, { foo: boolean }, true>;
-		expectTypeOf<Result>().branded.toEqualTypeOf<{ foo: boolean | undefined }>();
+	test("source overrides undefined default value", () => {
+		type Result = MergeValues<{ foo: undefined }, { foo: boolean }>;
+		expectTypeOf<Result>().toEqualTypeOf<{ foo: boolean }>();
 	});
 });
 
@@ -106,9 +106,9 @@ describe("MergeObjects", () => {
 		expectTypeOf<Result>().toEqualTypeOf<{ a: number }>();
 	});
 
-	test("overlapping key with undefined default and optional source", () => {
-		type Result = MergeObjects<{ foo: undefined }, { foo: boolean }, true>;
-		expectTypeOf<Result>().branded.toEqualTypeOf<{ foo: boolean | undefined }>();
+	test("source overrides undefined default value", () => {
+		type Result = MergeObjects<{ foo: undefined }, { foo: boolean }>;
+		expectTypeOf<Result>().toEqualTypeOf<{ foo: boolean }>();
 	});
 });
 
@@ -140,5 +140,41 @@ describe("MergeArrays", () => {
 	test("arrays with variable lengths and different types", () => {
 		type Result = MergeArrays<string[], number[]>;
 		expectTypeOf<Result>().toEqualTypeOf<(string | number)[]>();
+	});
+});
+
+describe("mergeDeep", () => {
+	test("overrides undefined property", () => {
+		const result = mergeDeep({ foo: undefined, bar: 1 }, { foo: "hello" });
+		expectTypeOf(result).toEqualTypeOf<{ foo: string; bar: number }>();
+	});
+
+	test("merges nested objects recursively", () => {
+		const result = mergeDeep(
+			{ nested: { a: 1, b: "hello" } },
+			{ nested: { a: 2, c: true } }
+		);
+		expectTypeOf(result).toEqualTypeOf<{ nested: { a: number; b: string; c: boolean } }>();
+	});
+
+	test("merges arrays", () => {
+		const result = mergeDeep({ items: ["a", "b"] }, { items: ["c"] });
+		expectTypeOf(result).toEqualTypeOf<{ items: string[] }>();
+	});
+
+	test("merges arrays with mixed types", () => {
+		const result = mergeDeep({ items: ["a", "b"] }, { items: [3] });
+		expectTypeOf(result).toEqualTypeOf<{ items: (string | number)[] }>();
+	});
+	
+	test("merges tuples", () => {
+		const result = mergeDeep({ items: ["a", "b"] satisfies ["a", "b"] }, { items: [3] satisfies [3] });
+		expectTypeOf(result).toEqualTypeOf<{ items: ["a", "b", 3] }>();
+	});
+
+	test("merges target with array of sources", () => {
+		const sources = [{ a: "2", c: true }, { a: "5", c: false }];
+		const result = mergeDeep({ a: 1, b: "hello" }, ...sources);
+		expectTypeOf(result).toEqualTypeOf<{ a: number, b: string } | { a: string, b: string, c: boolean }>();
 	});
 });

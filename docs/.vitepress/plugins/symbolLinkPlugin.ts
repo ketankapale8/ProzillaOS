@@ -1,7 +1,7 @@
 import type MarkdownIt from "markdown-it";
 import type { Registry, SymbolCategory } from "./symbolRegistry";
 import { PACKAGE_PATHS } from "../packages.config";
-import { resolveUrl } from "@prozilla-os/shared";
+import { resolveUrl } from "@prozilla-os/shared/utils";
 
 function getLink(targetPath: string, isIndex: boolean) {
 	const href = resolveUrl("/reference", targetPath);

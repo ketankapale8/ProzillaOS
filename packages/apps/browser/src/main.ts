@@ -7,19 +7,19 @@ const browser = new App<BrowserProps>("Browser", "browser", Browser, { size: new
 	.setIconUrl("https://os.prozilla.dev/assets/apps/icons/browser.svg")
 	.setRole(AppsConfig.APP_ROLES.browser)
 	.setCategory("Utilities & tools")
-	.setSkinOverride(MacOsSkin, { 
+	.addSkinOverride(MacOsSkin, { 
 		name: "Safari", 
-		iconUrl: `{${Skin.TEMPLATE_KEYS.baseUrl}}/assets/skins/mac/apps/icons/browser.svg`,
+		iconUrl: Skin.assetUrl("/assets/skins/mac/apps/icons/browser.svg"),
 	})
-	.setSkinOverride(Windows95Skin, { 
+	.addSkinOverride(Windows95Skin, { 
 		name: "Internet Explorer", 
-		iconUrl: `{${Skin.TEMPLATE_KEYS.baseUrl}}/assets/skins/windows95/apps/icons/browser.svg`,
+		iconUrl: Skin.assetUrl("/assets/skins/windows95/apps/icons/browser.svg"),
 	})
-	.setSkinOverride(MinimalSkin, { 
-		iconUrl: `{${Skin.TEMPLATE_KEYS.baseUrl}}/assets/skins/minimal/apps/icons/browser.svg`,
+	.addSkinOverride(MinimalSkin, { 
+		iconUrl: Skin.assetUrl("/assets/skins/minimal/apps/icons/browser.svg"),
 	})
-	.setSkinOverride(PixelSkin, { 
-		iconUrl: `{${Skin.TEMPLATE_KEYS.baseUrl}}/assets/skins/pixel/apps/icons/browser.png`,
+	.addSkinOverride(PixelSkin, { 
+		iconUrl: Skin.assetUrl("/assets/skins/pixel/apps/icons/browser.png"),
 	});
 
 export { browser, BrowserProps };
