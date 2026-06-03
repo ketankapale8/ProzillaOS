@@ -6,6 +6,8 @@ import lightbox from "vitepress-plugin-lightbox";
 import { SymbolRegistry } from "./plugins/symbolRegistry";
 import { inlineCodeLinksPlugin } from "./plugins/inlineCodeLinksPlugin";
 import { codeBlockLinksPlugin } from "./plugins/codeBlockLinksPlugin";
+import { codeBlockTitlePlugin } from "./plugins/codeBlockTitlePlugin";
+import { groupIconMdPlugin, groupIconVitePlugin } from "vitepress-plugin-group-icons";
 
 const symbolRegistry = new SymbolRegistry();
 
@@ -138,6 +140,12 @@ export default defineConfig({
 		config: (markdown) => {
 			markdown.use(lightbox, {});
 			markdown.use(inlineCodeLinksPlugin, { registry: symbolRegistry });
+			markdown.use(codeBlockTitlePlugin);
+			markdown.use(groupIconMdPlugin);
 		},
+	},
+
+	vite: {
+		plugins: [groupIconVitePlugin()],
 	},
 });
