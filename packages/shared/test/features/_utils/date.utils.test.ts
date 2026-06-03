@@ -1,8 +1,5 @@
-import { test as base } from "vitest";
+import { test } from "../..";
 import { formatTime } from "../../../src/features";
-import { extend } from "@prozilla-os/dev-tools";
-
-const test = extend(base);
 
 test.cases(formatTime, [
 	[[1000], "1 second"],

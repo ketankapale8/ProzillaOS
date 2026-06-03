@@ -1,6 +1,6 @@
 import { ANSI } from "../../constants";
 import { Ansi } from "./ansi";
-import { isObject } from "../_utils";
+import { isObject, mergeDeep } from "../_utils";
 
 const CONTEXT = Symbol("formatContext");
 const REACT_ELEMENT = Symbol.for("react.element");
@@ -58,6 +58,7 @@ export interface FormatOptions {
 	 * @default true
 	 */
 	spaceAfterComma?: boolean;
+	plugins?: ((value: unknown, options: Required<FormatOptions>) => string | undefined)[];
 	stringColor?: string | null;
 	numberColor?: string | null;
 	booleanColor?: string | null;
@@ -115,6 +116,7 @@ const DEFAULT_OPTIONS: NormalizedFormatOptions = {
 	htmlTagColor: ANSI.fg.red,
 	reactComponentColor: ANSI.fg.yellow,
 	delimiterColor: ANSI.fg.cyan,
+	plugins: [],
 };
 
 /**
@@ -140,6 +142,8 @@ const DEFAULT_OPTIONS: NormalizedFormatOptions = {
  */
 export function format(value: unknown, options?: FormatOptions): string {
 	const context = resolveContext(options);
+	if (typeof context === "string")
+		return context;
 
 	if (value === null)
 		return color("null", context.nullColor, context.colors);
@@ -198,6 +202,9 @@ export function format(value: unknown, options?: FormatOptions): string {
  */
 export function formatFunctionCall<A extends unknown[] = [], R = undefined>(func: (...args: A) => R, args: A, returnValue: R, options?: FormatOptions): string {
 	const context = resolveContext({ ...options, depth: 3 });
+	if (typeof context === "string")
+		return context;
+
 	const formattedName = color(func.name || "(anonymous)", context.functionColor, context.colors);
 	const formattedArgs = args.map((arg) => format(arg, forkContext(context))).join(context.separator());
 	const formattedReturnValue = format(returnValue, forkContext(context));
@@ -218,6 +225,8 @@ export function formatFunctionCall<A extends unknown[] = [], R = undefined>(func
  */
 export function formatReactElement(element: ReactElementLike, options?: FormatOptions): string {
 	const context = resolveContext(options);
+	if (typeof context === "string")
+		return context;
 
 	let name: string;
 	let isFragment = false;
@@ -299,6 +308,9 @@ function formatReactElementProp(key: string, value: unknown, context: FormatCont
  */
 export function formatString(string: string, options?: FormatOptions): string {
 	const context = resolveContext(options);
+	if (typeof context === "string")
+		return context;
+
 	const needsTruncation = string.length > context.maxStringLength;
 	const truncated = needsTruncation ? string.slice(0, context.maxStringLength) : string;
 
@@ -321,6 +333,9 @@ export function formatString(string: string, options?: FormatOptions): string {
 // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
 export function formatFunction(func: Function, options?: FormatOptions): string {
 	const context = resolveContext(options);
+	if (typeof context === "string")
+		return context;
+
 	const name = func.name || "(anonymous)";
 	return color(`[Function: ${name}]`, context.functionColor, context.colors);
 }
@@ -339,6 +354,9 @@ export function formatFunction(func: Function, options?: FormatOptions): string 
  */
 export function formatArray(array: unknown[], options?: FormatOptions): string {
 	const context = resolveContext(options);
+	if (typeof context === "string")
+		return context;
+
 	const guarded = guard(array, context, `[Array(${array.length})]`);
 	if (guarded !== null)
 		return guarded;
@@ -371,6 +389,9 @@ export function formatArray(array: unknown[], options?: FormatOptions): string {
  */
 export function formatObject(object: Record<PropertyKey, unknown>, options?: FormatOptions): string {
 	const context = resolveContext(options);
+	if (typeof context === "string")
+		return context;
+
 	const guarded = guard(object, context, "[Object]");
 	if (guarded !== null)
 		return guarded;
@@ -401,6 +422,9 @@ export function formatObject(object: Record<PropertyKey, unknown>, options?: For
  */
 export function formatMap(map: Map<unknown, unknown>, options?: FormatOptions): string {
 	const context = resolveContext(options);
+	if (typeof context === "string")
+		return context;
+
 	const guarded = guard(map, context, `Map(${map.size})`);
 	if (guarded !== null)
 		return guarded;
@@ -425,6 +449,9 @@ export function formatMap(map: Map<unknown, unknown>, options?: FormatOptions): 
  */
 export function formatSet(set: Set<unknown>, options?: FormatOptions): string {
 	const context = resolveContext(options);
+	if (typeof context === "string")
+		return context;
+
 	const guarded = guard(set, context, `Set(${set.size})`);
 	if (guarded !== null)
 		return guarded;
@@ -448,6 +475,9 @@ export function formatSet(set: Set<unknown>, options?: FormatOptions): string {
  */
 export function formatError(error: Error, options?: FormatOptions): string {
 	const context = resolveContext(options);
+	if (typeof context === "string")
+		return context;
+
 	const name = error.name || "Error";
 	const message = error.message || "";
 	return color(`${name}: ${message}`, context.errorColor, context.colors);
@@ -473,20 +503,29 @@ function formatInline(items: string[], context: FormatContext, head: string, tai
 	return inline;
 }
 
-function resolveContext(options?: FormatOptions): FormatContext {
-	if (options && isContext(options))
-		return options;
+function resolveContext(value: unknown, options?: FormatOptions): string | FormatContext {
+	let context: FormatContext;
+	if (options && isContext(options)) {
+		context = options;
+	} else {
+		context = {
+			...options ? mergeDeep(DEFAULT_OPTIONS, { plugins: [], ...options }) : DEFAULT_OPTIONS,
+			[CONTEXT]: true,
+			currentDepth: 0,
+			seen: new WeakSet(),
+			delimiter: (delimiter) => color(delimiter, context.delimiterColor, context.colors),
+			separator: () => context.spaceAfterComma ? context.delimiter(",") + " " : context.delimiter(","),
+		};
+	}
+	
+	// TODO: Add every value to the seen map and only run plugins once for every value
+	for (const plugin of context.plugins) {
+		const result = plugin(value, context);
+		if (result !== undefined)
+			return result;
+	}
 
-	const context: FormatContext = {
-		...DEFAULT_OPTIONS,
-		[CONTEXT]: true,
-		currentDepth: 0,
-		seen: new WeakSet(),
-		delimiter: (delimiter) => color(delimiter, context.delimiterColor, context.colors),
-		separator: () => context.spaceAfterComma ? context.delimiter(",") + " " : context.delimiter(","),
-	};
-
-	return options ? Object.assign(context, options) : context;
+	return context;
 }
 
 function forkContext(context: FormatContext): FormatContext {

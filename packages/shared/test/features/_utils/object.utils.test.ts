@@ -1,8 +1,5 @@
-import { test as base } from "vitest";
-import { extend } from "@prozilla-os/dev-tools";
+import { test } from "../..";
 import { isObject, mergeDeep } from "../../../src/features";
-
-const test = extend(base);
 
 test.simpleCases(isObject, [
 	[true, false],

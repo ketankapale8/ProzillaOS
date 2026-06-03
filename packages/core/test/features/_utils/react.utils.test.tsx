@@ -1,8 +1,5 @@
-import { test as base } from "vitest";
+import { test } from "../..";
 import { isEmpty } from "../../../src/features";
-import { extend } from "@prozilla-os/dev-tools/test";
-
-const test = extend(base);
 
 test.simpleCases(isEmpty, [
 	[null, true],

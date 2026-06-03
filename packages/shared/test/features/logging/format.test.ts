@@ -1,9 +1,7 @@
-import { extend } from "@prozilla-os/dev-tools";
-import { test as base } from "vitest";
-import { format, formatArray, formatObject, formatReactElement, formatString } from "../../../src/features";
+import { format, formatArray, formatObject, FormatOptions, formatReactElement, formatString } from "../../../src/features";
 import { mockComponent, mockElement, mockFragment } from "./react.utils";
-
-const test = extend(base);
+import { test } from "../..";
+import { describe, expect } from "vitest";
 
 test.cases(format, [
 	[[null, { colors: false }], "null"],
@@ -49,3 +47,15 @@ test.cases(formatReactElement, [
 	[[mockComponent({ name: "Component" }), { colors: false }], "<Component/>"],
 	[[mockComponent({ name: "Component", props: { foo: "bar" } }), { colors: false }], "<Component foo={\"bar\"}/>"],
 ]);
+
+describe("plugins are executed before every format function", () => {
+	const expected = "plugin";
+	const options: FormatOptions = { plugins: [() => expected] };
+
+	expect(format(null, options)).toBe(expected);
+	expect(format(0, options)).toBe(expected);
+	expect(formatString("not-plugin", options)).toBe(expected);
+	expect(formatArray([1, 2, 3], options)).toBe(expected);
+	expect(formatObject({ foo: "bar" }, options)).toBe(expected);
+	expect(formatReactElement(mockFragment(), options)).toBe(expected);
+});

@@ -1,8 +1,5 @@
-import { test as base } from "vitest";
-import { extend } from "@prozilla-os/dev-tools";
+import { test } from "../..";
 import { clamp, round } from "../../../src/features";
-
-const test = extend(base);
 
 test.cases(clamp, [
 	[[0, 0, 1], 0],

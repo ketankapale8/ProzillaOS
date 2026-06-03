@@ -1,8 +1,6 @@
-import { assert, test as base, describe, expect } from "vitest";
-import { extend } from "@prozilla-os/dev-tools";
+import { assert, describe, expect } from "vitest";
 import { Storage } from "../../../src/features";
-
-const test = extend(base);
+import { test } from "../..";
 
 let mockStorage: Storage | null = null;
 

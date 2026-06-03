@@ -1,8 +1,5 @@
-import { test as base } from "vitest";
-import { extend } from "@prozilla-os/dev-tools";
+import { test } from "../..";
 import { removeBaseUrl, removeUrlProtocol } from "../../../src/features";
-
-const test = extend(base);
 
 test.simpleCases(removeUrlProtocol, [
 	["https://example.com/foo/bar", "example.com/foo/bar"],

@@ -1,8 +1,5 @@
-import { test as base } from "vitest";
-import { extend } from "@prozilla-os/dev-tools";
+import { test } from "../..";
 import { formatShortcut } from "../../../src/features";
-
-const test = extend(base);
 
 test.simpleCases(formatShortcut, [
 	[["a"], "A"],

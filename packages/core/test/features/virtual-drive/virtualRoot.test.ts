@@ -1,10 +1,8 @@
-import { assert, test as base, expect } from "vitest";
-import { extend } from "@prozilla-os/dev-tools";
+import { assert, expect } from "vitest";
 import { VirtualRoot } from "../../../src/features";
 import { MockSystemManager } from "../system/system.utils";
 import { MockVirtualRoot } from "./virtualDrive.utils";
-
-const test = extend(base);
+import { test } from "../..";
 
 let mockVirtualRoot: VirtualRoot | null = null;
 

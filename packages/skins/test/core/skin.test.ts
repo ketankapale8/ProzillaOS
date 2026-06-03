@@ -1,8 +1,6 @@
-import { extend } from "@prozilla-os/dev-tools";
-import { describe, test as base, expect } from "vitest";
+import { describe, expect } from "vitest";
 import { Skin } from "../../src/core";
-
-const test = extend(base);
+import { test } from "..";
 
 const DEFAULT_BASE_URL = "https://os.prozilla.dev/";
 

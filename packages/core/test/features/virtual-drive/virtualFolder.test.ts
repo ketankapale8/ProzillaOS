@@ -1,8 +1,6 @@
-import { test as base, expect } from "vitest";
-import { extend } from "@prozilla-os/dev-tools";
+import { expect } from "vitest";
 import { MockVirtualFile, MockVirtualFolder } from "./virtualDrive.utils";
-
-const test = extend(base);
+import { test } from "../..";
 
 test("toJSON()", () => {
 	const mockVirtualFolderEmpty = new MockVirtualFolder("foo");
