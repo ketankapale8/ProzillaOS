@@ -52,17 +52,6 @@ Configurations for functional elements and features
 }
 ```
 
-> [!NOTE] References
->
-> - [AppsConfig](/reference/core/Classes/AppsConfig)
-> - [DesktopConfig](/reference/core/Classes/DesktopConfig)
-> - [MiscConfig](/reference/core/Classes/MiscConfig)
-> - [ModalsConfig](/reference/core/Classes/ModalsConfig)
-> - [TaskbarConfig](/reference/core/Classes/TaskbarConfig)
-> - [TrackingConfig](/reference/core/Classes/TrackingConfig)
-> - [WindowsConfig](/reference/core/Classes/WindowsConfig)
-> - [VirtualDriveConfig](/reference/core/Classes/VirtualDriveConfig)
-
 ## Example
 
 ```tsx

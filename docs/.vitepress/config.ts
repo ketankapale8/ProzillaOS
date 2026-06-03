@@ -3,10 +3,11 @@ import { PACKAGES, packageSidebars } from "./packages.config";
 import { DESCRIPTION, IMAGE, LOCALE, TITLE } from "./meta.config";
 import { NAVIGATION } from "./nav.config";
 import lightbox from "vitepress-plugin-lightbox";
-import { buildSymbolRegistry } from "./plugins/symbolRegistry";
-import { symbolLinkPlugin } from "./plugins/symbolLinkPlugin";
+import { SymbolRegistry } from "./plugins/symbolRegistry";
+import { inlineCodeLinksPlugin } from "./plugins/inlineCodeLinksPlugin";
+import { codeBlockLinksPlugin } from "./plugins/codeBlockLinksPlugin";
 
-const symbolRegistry = buildSymbolRegistry();
+const symbolRegistry = new SymbolRegistry();
 
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
@@ -133,9 +134,10 @@ export default defineConfig({
 			dark: "material-theme",
 			light: "material-theme-lighter",
 		},
+		codeTransformers: [codeBlockLinksPlugin(symbolRegistry, "/docs")],
 		config: (markdown) => {
 			markdown.use(lightbox, {});
-			markdown.use(symbolLinkPlugin, { registry: symbolRegistry });
+			markdown.use(inlineCodeLinksPlugin, { registry: symbolRegistry });
 		},
 	},
 });

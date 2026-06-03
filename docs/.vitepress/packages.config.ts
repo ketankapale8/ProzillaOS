@@ -122,13 +122,11 @@ export const packageSidebars = (packages: PackageData[]): DefaultTheme.Sidebar =
 				const content = readFileSync(path, "utf-8");
 				const navigation = JSON.parse(content) as NavigationJSON;
 				navigation.forEach((group: NavigationItem) => {
-					const groupItems: DefaultTheme.SidebarItem[] = group.children?.map((child) => {
-						return {
-							text: child.title,
-							link: child.path?.replace(group.title, ""),
-							collapsed: true,
-						};
-					}) ?? [];
+					const groupItems: DefaultTheme.SidebarItem[] = group.children?.map((child) => ({
+						text: child.title,
+						link: child.path?.replace(group.title, ""),
+						collapsed: true,
+					})).sort(({ text: titleA }, { text: titleB }) => titleA.localeCompare(titleB)) ?? [];
 
 					packageItems.push({
 						text: group.title,
