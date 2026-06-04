@@ -52,6 +52,8 @@ pnpm install
 
 # Start the demo development server
 pnpm run start
+# Or open the interactive task menu
+pnpm run menu 
 ```
 
 <!-- #endregion getting-started -->

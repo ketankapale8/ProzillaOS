@@ -31,6 +31,7 @@ ProzillaOS is a monorepo managed with pnpm workspaces. See [packages/README.md](
 | --- | --- |
 | `pnpm run build` | Build all packages, demo and docs |
 | `pnpm run packages:build` | Build only packages (not websites) |
+| `pnpm run libs:build` | Build only libraries (no app packages or websites) |
 | `pnpm run start` | Start the demo development server |
 | `pnpm run lint` | Lint all files with ESLint (auto-fix) |
 | `pnpm run lint:nofix` | Lint all files with ESLint (no auto-fix) |
