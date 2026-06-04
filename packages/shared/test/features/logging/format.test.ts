@@ -48,14 +48,40 @@ test.cases(formatReactElement, [
 	[[mockComponent({ name: "Component", props: { foo: "bar" } }), { colors: false }], "<Component foo={\"bar\"}/>"],
 ]);
 
-describe("plugins are executed before every format function", () => {
-	const expected = "plugin";
-	const options: FormatOptions = { plugins: [() => expected] };
+describe("formatting plugins", () => {
+	test("are executed before every format function", () => {
+		let count = 0;
+		const options: FormatOptions = { plugins: [() => (++count).toString()] };
 
-	expect(format(null, options)).toBe(expected);
-	expect(format(0, options)).toBe(expected);
-	expect(formatString("not-plugin", options)).toBe(expected);
-	expect(formatArray([1, 2, 3], options)).toBe(expected);
-	expect(formatObject({ foo: "bar" }, options)).toBe(expected);
-	expect(formatReactElement(mockFragment(), options)).toBe(expected);
+		expect(format(null, options)).toBe("1");
+		expect(format(0, options)).toBe("2");
+		expect(formatString("not-plugin", options)).toBe("3");
+		expect(formatArray([1, 2, 3], options)).toBe("4");
+		expect(formatObject({ foo: "bar" }, options)).toBe("5");
+		expect(formatReactElement(mockFragment(), options)).toBe("6");
+		expect(count).toBe(6);
+	});
+
+	test("can target a specific type of value", () => {
+		let count = 0;
+		const options: FormatOptions = {
+			colors: false,
+			plugins: [
+				(value) => {
+					if (typeof value === "string")
+						return (++count).toString();
+				},
+			],
+		};
+
+		expect(format(null, options)).toBe("null");
+		expect(format(0, options)).toBe("0");
+		expect(formatString("not-plugin", options)).toBe("1");
+		expect(formatArray([1, 2, 3], options)).toBe("[1, 2, 3]");
+		expect(formatArray(["a", "b", "c"], options)).toBe("[2, 3, 4]");
+		expect(formatObject({ foo: "bar" }, options)).toBe("{ foo: 5 }");
+		expect(formatReactElement(mockFragment(), options)).toBe("<></>");
+		expect(count).toBe(5);
+	});
 });
+

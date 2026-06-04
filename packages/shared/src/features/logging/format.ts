@@ -141,7 +141,7 @@ const DEFAULT_OPTIONS: NormalizedFormatOptions = {
  * ```
  */
 export function format(value: unknown, options?: FormatOptions): string {
-	const context = resolveContext(options);
+	const context = resolveContext(value, options);
 	if (typeof context === "string")
 		return context;
 
@@ -201,7 +201,7 @@ export function format(value: unknown, options?: FormatOptions): string {
  * @returns The formatted string.
  */
 export function formatFunctionCall<A extends unknown[] = [], R = undefined>(func: (...args: A) => R, args: A, returnValue: R, options?: FormatOptions): string {
-	const context = resolveContext({ ...options, depth: 3 });
+	const context = resolveContext(func, { ...options, depth: 3 });
 	if (typeof context === "string")
 		return context;
 
@@ -224,7 +224,7 @@ export function formatFunctionCall<A extends unknown[] = [], R = undefined>(func
  * ```
  */
 export function formatReactElement(element: ReactElementLike, options?: FormatOptions): string {
-	const context = resolveContext(options);
+	const context = resolveContext(element, options);
 	if (typeof context === "string")
 		return context;
 
@@ -307,7 +307,7 @@ function formatReactElementProp(key: string, value: unknown, context: FormatCont
  * ```
  */
 export function formatString(string: string, options?: FormatOptions): string {
-	const context = resolveContext(options);
+	const context = resolveContext(string, options);
 	if (typeof context === "string")
 		return context;
 
@@ -332,7 +332,7 @@ export function formatString(string: string, options?: FormatOptions): string {
  */
 // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
 export function formatFunction(func: Function, options?: FormatOptions): string {
-	const context = resolveContext(options);
+	const context = resolveContext(func, options);
 	if (typeof context === "string")
 		return context;
 
@@ -353,7 +353,7 @@ export function formatFunction(func: Function, options?: FormatOptions): string 
  * ```
  */
 export function formatArray(array: unknown[], options?: FormatOptions): string {
-	const context = resolveContext(options);
+	const context = resolveContext(array, options);
 	if (typeof context === "string")
 		return context;
 
@@ -388,7 +388,7 @@ export function formatArray(array: unknown[], options?: FormatOptions): string {
  * ```
  */
 export function formatObject(object: Record<PropertyKey, unknown>, options?: FormatOptions): string {
-	const context = resolveContext(options);
+	const context = resolveContext(object, options);
 	if (typeof context === "string")
 		return context;
 
@@ -421,7 +421,7 @@ export function formatObject(object: Record<PropertyKey, unknown>, options?: For
  * @returns The formatted string.
  */
 export function formatMap(map: Map<unknown, unknown>, options?: FormatOptions): string {
-	const context = resolveContext(options);
+	const context = resolveContext(map, options);
 	if (typeof context === "string")
 		return context;
 
@@ -448,7 +448,7 @@ export function formatMap(map: Map<unknown, unknown>, options?: FormatOptions): 
  * @returns The formatted string.
  */
 export function formatSet(set: Set<unknown>, options?: FormatOptions): string {
-	const context = resolveContext(options);
+	const context = resolveContext(set, options);
 	if (typeof context === "string")
 		return context;
 
@@ -474,7 +474,7 @@ export function formatSet(set: Set<unknown>, options?: FormatOptions): string {
  * @returns The formatted string.
  */
 export function formatError(error: Error, options?: FormatOptions): string {
-	const context = resolveContext(options);
+	const context = resolveContext(error, options);
 	if (typeof context === "string")
 		return context;
 
