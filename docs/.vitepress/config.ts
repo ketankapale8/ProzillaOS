@@ -1,4 +1,4 @@
-import { DefaultTheme, defineConfig, HeadConfig } from "vitepress";
+import { defineConfig, HeadConfig } from "vitepress";
 import { PACKAGES, packageSidebars } from "./packages.config";
 import { DESCRIPTION, IMAGE, LOCALE, TITLE } from "./meta.config";
 import { NAVIGATION } from "./nav.config";
@@ -42,17 +42,17 @@ export default defineConfig({
 			...NAVIGATION.map(({ text: navigationText, base, items = [] }) => ({
 				text: navigationText,
 				base,
-				items: items.map(({ text, link }) => ({
+				items: items.map(({ text = "", link = "" }) => ({
 					text,
 					link: base ? base + link : link,
 				})),
-			}) as DefaultTheme.NavItem),
+			})),
 		],
 
 		sidebar: Object.assign(
 			{},
 			{
-				"/": NAVIGATION satisfies DefaultTheme.SidebarItem[],
+				"/": NAVIGATION,
 				...packageSidebars(PACKAGES),
 			}
 		),

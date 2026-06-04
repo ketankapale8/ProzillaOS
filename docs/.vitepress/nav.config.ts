@@ -1,7 +1,7 @@
 import type { DefaultTheme } from "vitepress";
 import { packageReferenceItems, PACKAGES } from "./packages.config";
 
-export const NAVIGATION: (DefaultTheme.NavItemChildren & DefaultTheme.SidebarItem)[] = [
+export const NAVIGATION: DefaultTheme.SidebarItem[] = [
 	{
 		text: "About",
 		base: "/about",
@@ -36,6 +36,6 @@ export const NAVIGATION: (DefaultTheme.NavItemChildren & DefaultTheme.SidebarIte
 			{
 				items: packageReferenceItems(PACKAGES),
 			},
-		] as (DefaultTheme.NavItemWithLink & DefaultTheme.SidebarItem)[],
+		],
 	},
 ];
