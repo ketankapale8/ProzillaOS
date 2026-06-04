@@ -4,8 +4,9 @@
 	"tasks": {
 		"build": {
 			"dependsOn": ["^build"],
+			"inputs": ["$TURBO_DEFAULT$", "!README.md", "!CHANGELOG.md", "!test/**"],
 			"outputs": ["dist/**"],
-			"outputLogs": "new-only"
+			"outputLogs": "new-only",
 		},
 		"test": {
 			"dependsOn": ["@prozilla-os/dev-tools#build"],

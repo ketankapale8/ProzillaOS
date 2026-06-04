@@ -4,22 +4,25 @@
 	"tasks": {
 		"build": {
 			"dependsOn": ["$TURBO_EXTENDS$", "api"],
-			"inputs": ["$TURBO_DEFAULT$", "src/reference/**"]
+			"inputs": ["$TURBO_EXTENDS$", "src/reference/**"]
 		},
 		"api": {
 			"dependsOn": ["^build"],
+			"inputs": ["$TURBO_DEFAULT$", "!README.md", "!CHANGELOG.md", "!src/**", "!.vitepress/**", "../packages/**/dist/**"],
 			"outputs": ["src/reference/**"],
 			"env": ["RELEASE_PATH"],
 			"outputLogs": "new-only"
 		},
 		"api:libs": {
 			"dependsOn": ["^build"],
+			"inputs": ["$TURBO_DEFAULT$", "!README.md", "!CHANGELOG.md", "!src/**", "!.vitepress/**", "../packages/**/dist/**"],
 			"outputs": ["src/reference/**"],
 			"env": ["RELEASE_PATH"],
 			"outputLogs": "new-only"
 		},
 		"api:apps": {
 			"dependsOn": ["^build"],
+			"inputs": ["$TURBO_DEFAULT$", "!README.md", "!CHANGELOG.md", "!src/**", "!.vitepress/**", "../packages/**/dist/**"],
 			"outputs": ["src/reference/**"],
 			"env": ["RELEASE_PATH"],
 			"outputLogs": "new-only"

@@ -5,11 +5,12 @@
 		"fetch": {
 			"dependsOn": ["^build"],
 			"cache": false,
+			"inputs": ["$TURBO_DEFAULT$", "!index.html", "!public/**", "!src/**", "!README.md", "scripts/fetchRepository.ts"],
 			"outputLogs": "new-only"
 		},
 		"build": {
 			"dependsOn": ["$TURBO_EXTENDS$", "fetch"],
-			"inputs": ["$TURBO_DEFAULT$", "public/config/tree.json"],
+			"inputs": ["$TURBO_EXTENDS$", "public/config/tree.json"],
 			"outputLogs": "new-only"
 		}
 	}
