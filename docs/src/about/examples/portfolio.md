@@ -1,5 +1,11 @@
 ---
 outline: deep
+prev:
+  text: Examples
+  link: ./
+next:
+  text: Terminal example
+  link: ./terminal
 ---
 
 # Portfolio example

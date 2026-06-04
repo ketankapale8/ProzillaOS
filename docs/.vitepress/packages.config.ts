@@ -89,6 +89,12 @@ export const PACKAGES: PackageData[] = [
 		category: "Apps",
 		auto: true,
 	},
+	{
+		text: "@prozilla-os/browser",
+		link: "apps/browser",
+		category: "Apps",
+		auto: true,
+	},
 ];
 
 export const PACKAGE_PATHS = PACKAGES

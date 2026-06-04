@@ -236,6 +236,10 @@
 	padding: 12px 12px 6px;
 }
 
+.custom-block code {
+	text-decoration: inherit;
+}
+
 .custom-block > .custom-block-title {
 	display: flex;
 	gap: 0.5rem;
@@ -503,4 +507,31 @@ html:not(.dark) .shiki:hover .symbol-link {
 	html:not(.dark) .shiki .symbol-link {
 		text-decoration-color: var(--shiki-light, inherit);
 	}
+}
+
+.symbol-link.package-symbol, .inline-symbol-link.component-symbol {
+	text-decoration: none;
+}
+
+.symbol-link.package-symbol {
+	word-break: keep-all;
+	white-space: nowrap;
+}
+
+.symbol-link.package-symbol > code {
+	color: var(--vp-custom-block-info-text);
+	background-color: var(--vp-custom-block-info-bg);
+}
+
+a.inline-symbol-link.component-symbol:hover > code {
+	color: var(--yellow-1);
+}
+
+a.inline-symbol-link.component-symbol > code {
+	color: var(--yellow-0);
+	background-color: var(--yellow-2);
+}
+
+.vp-doc code.inline-string {
+	color: var(--green-0);
 }

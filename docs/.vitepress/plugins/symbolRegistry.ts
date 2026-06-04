@@ -7,18 +7,30 @@ import { PACKAGE_PATHS, packagePathToId } from "../packages.config";
 
 const logger = new Logger({ prefix: "[registry]" });
 
-export type SymbolCategory = "component" | "function" | "hook" | "class" | "variable" | "enum" | "interface" | "type" | "namespace";
+export type SymbolCategory =
+	| "app"
+	| "component"
+	| "function"
+	| "hook"
+	| "class"
+	| "variable"
+	| "enum"
+	| "interface"
+	| "type"
+	| "namespace"
+	| "package";
 
 export interface SymbolEntry {
 	path: string;
 	packageName: string;
-	category?: SymbolCategory;
+	type: SymbolCategory;
 	href: string;
 }
 
 type Collision = { symbol: string; kept: string; skipped: string };
 
-const GROUP_CATEGORIES: Record<string, SymbolCategory> = {
+const GROUP_TO_TYPE: Record<string, SymbolCategory> = {
+	"Apps": "app",
 	"Components": "component",
 	"Functions": "function",
 	"Hooks": "hook",
@@ -49,6 +61,7 @@ export class SymbolRegistry extends Map<string, SymbolEntry> {
 		this.set("prozilla-os", {
 			path: "prozilla-os",
 			packageName: "prozilla-os",
+			type: "package",
 			href: SymbolRegistry.indexUrl("prozilla-os"),
 		});
 
@@ -77,6 +90,7 @@ export class SymbolRegistry extends Map<string, SymbolEntry> {
 		this.set(packagePathToId(packageName), {
 			path: packageName,
 			packageName,
+			type: "package",
 			href: SymbolRegistry.indexUrl(packageName),
 		});
 
@@ -86,7 +100,7 @@ export class SymbolRegistry extends Map<string, SymbolEntry> {
 			if (!Array.isArray(children))
 				continue;
 
-			const category = GROUP_CATEGORIES[group.title];
+			const type = GROUP_TO_TYPE[group.title];
 
 			for (const child of children) {
 				if (!child.title || !child.path)
@@ -113,7 +127,7 @@ export class SymbolRegistry extends Map<string, SymbolEntry> {
 				this.set(child.title, {
 					path: childPath,
 					packageName,
-					category,
+					type,
 					href: SymbolRegistry.referenceUrl(childPath),
 				});
 			}
@@ -131,7 +145,7 @@ export class SymbolRegistry extends Map<string, SymbolEntry> {
 
 	resolveSymbol(name: string, category?: SymbolCategory) {
 		const found = this.get(name);
-		if (found && (!category || found.category === category))
+		if (found && (!category || found.type === category))
 			return found;
 	}
 

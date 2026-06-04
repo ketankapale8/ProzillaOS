@@ -1,11 +1,33 @@
-import type { ShikiTransformer } from "@shikijs/types";
+import type { ShikiTransformer, ThemedToken } from "@shikijs/types";
 import type { SymbolRegistry } from "./symbolRegistry";
 import type { ElementContent } from "hast";
 import { resolveUrl } from "@prozilla-os/shared/utils";
+import { PACKAGES } from "../packages.config";
 
 const NAME = "code-block-links";
 const LANGUAGES = ["js", "jsx", "ts", "tsx"];
 const OPACITY = 0.375;
+
+const EXCLUDED_SCOPES = [
+	"keyword.",
+	"punctuation.",
+	"storage.",
+	"entity.name.class",
+	"entity.name.interface",
+	"entity.name.type.alias",
+	"entity.name.enum",
+	"entity.name.symbol",
+	"meta.var.",
+	"meta.parameter.",
+	"meta.object-literal.key.",
+	"constant.language",
+	"constant.numeric",
+];
+
+const INHERITED_EXCLUDED_SCOPES = [
+	"comment.",
+	"string.",
+];
 
 /**
  * Shiki transformer that adds links to symbols in code blocks.
@@ -15,9 +37,41 @@ export function codeBlockLinksPlugin(registry: SymbolRegistry, base = ""): Shiki
 		return { name: NAME };
 
 	const hexAlpha = Math.round(OPACITY * 255).toString(16).padStart(2, "0");
+	const excludedContent = new Set<string>();
 
 	return {
 		name: NAME,
+		preprocess() {
+			this.options.includeExplanation = "scopeName";
+			excludedContent.clear();
+		},
+		tokens(tokens) {
+			const importMap = buildImportMap(tokens);
+
+			for (const [symbol, source] of importMap) {
+				const entry = registry.get(symbol);
+				if (!entry)
+					continue;
+
+				const expectedPath = importSourceToPackagePath(source);
+				if (expectedPath && entry.packageName !== expectedPath)
+					excludedContent.add(symbol);
+			}
+
+			for (const line of tokens) {
+				for (const token of line) {
+					if (!token.explanation)
+						continue;
+
+					const scopes = token.explanation.flatMap((explanation) =>
+						explanation.scopes.map((scope) => scope.scopeName)
+					);
+
+					if (scopes[0] && isExcludedByScope(scopes))
+						excludedContent.add(token.content.trim());
+				}
+			}
+		},
 		line(element) {
 			if (!LANGUAGES.includes(this.options.lang))
 				return;
@@ -39,11 +93,11 @@ export function codeBlockLinksPlugin(registry: SymbolRegistry, base = ""): Shiki
 
 				const raw = textNode.value;
 				const trimmed = raw.trim();
-				if (!trimmed)
+				if (!trimmed || excludedContent.has(trimmed))
 					continue;
 
 				const entry = registry.get(trimmed);
-				if (!entry?.category)
+				if (!entry || entry.type === "package")
 					continue;
 
 				const trimmedStart = raw.indexOf(trimmed);
@@ -96,4 +150,70 @@ export function codeBlockLinksPlugin(registry: SymbolRegistry, base = ""): Shiki
 			}
 		},
 	};
+}
+
+function buildImportMap(tokens: ThemedToken[][]) {
+	const importMap = new Map<string, string>();
+
+	for (const line of tokens) {
+		let source = "";
+		const identifiers: string[] = [];
+
+		for (const token of line) {
+			if (!token.explanation)
+				continue;
+
+			const scopes = token.explanation.flatMap((entry) =>
+				entry.scopes.map((scope) => scope.scopeName)
+			);
+
+			const isInImport = scopes.some((scope) => scope.startsWith("meta.import."));
+			if (!isInImport)
+				continue;
+
+			const isStringLiteral = scopes.some((scope) => scope.startsWith("string.quoted."));
+			if (isStringLiteral) {
+				source = token.content.replace(/["']/g, "").trim();
+				continue;
+			}
+
+			const isIdentifier = scopes.some((scope) =>
+				scope.startsWith("entity.name.") || scope.startsWith("variable.other.")
+			);
+			if (isIdentifier)
+				identifiers.push(token.content.trim());
+		}
+
+		if (source) {
+			for (const identifier of identifiers) {
+				if (!importMap.has(identifier))
+					importMap.set(identifier, source);
+			}
+		}
+	}
+
+	return importMap;
+}
+
+function importSourceToPackagePath(source: string) {
+	const matched = PACKAGES.find(
+		(packageData) => source === packageData.text || source.startsWith(packageData.text + "/")
+	);
+	return matched?.text;
+}
+
+function isExcludedByScope(scopes: string[]) {
+	const primaryScope = scopes[0];
+
+	if (EXCLUDED_SCOPES.some((prefix) => primaryScope.startsWith(prefix)))
+		return true;
+
+	if (INHERITED_EXCLUDED_SCOPES.some((prefix) => scopes.some((scope) => scope.startsWith(prefix))))
+		return true;
+
+	if (scopes.some((scope) => scope.startsWith("entity.name.function"))) {
+		return !scopes.some((scope) => scope.startsWith("meta.function-call"));
+	}
+
+	return false;
 }

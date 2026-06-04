@@ -16,7 +16,7 @@ There are multiple ways to install ProzillaOS. The simplest way is to install th
 
 ::: code-group
 
-```bash [NPM]
+```bash [npm]
 npm install prozilla-os
 ```
 
@@ -38,7 +38,7 @@ Alternatively, you can install the `@prozilla-os/core` package, which only conta
 
 ::: code-group
 
-```bash [NPM]
+```bash [npm]
 npm install @prozilla-os/core
 ```
 
@@ -62,7 +62,7 @@ Install apps by running the command below. Replace `[app]` with the id of the ap
 
 ::: code-group
 
-```bash [NPM]
+```bash [npm]
 npm install @prozilla-os/[app]
 ```
 
@@ -118,11 +118,11 @@ export function App(): ReactElement {
 }
 ```
 
-Replace `"Example"` with a system name of your choosing and `"Power by ProzillaOS"` by your tag line/short description.
+Replace `"Example"` with a system name of your choosing and `"Powered by ProzillaOS"` by your tag line/short description.
 
 If you don't want a taskbar/desktop/modal in your project, you can leave those components out. Unless you don't want to be able to open applications in your project, you will need to keep the `<WindowsView>` component.
 
-> [!CAUTION]
+> [!NOTE]
 > Depending on how you installed ProzillaOS, your import statement will look slightly different. Make sure you are importing from the correct package that you installed previously.
 
 ### Using apps

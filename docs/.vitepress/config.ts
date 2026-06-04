@@ -143,6 +143,16 @@ export default defineConfig({
 			markdown.use(codeBlockTitlePlugin);
 			markdown.use(groupIconMdPlugin);
 		},
+		container: {
+			tipLabel: "Tip",
+			warningLabel: "Warning",
+			dangerLabel: "Danger",
+			infoLabel: "Info",
+			detailsLabel: "Details",
+			cautionLabel: "Caution",
+			importantLabel: "Important",
+			noteLabel: "Note",
+		},
 	},
 
 	vite: {

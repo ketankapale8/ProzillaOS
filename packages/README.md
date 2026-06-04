@@ -12,10 +12,12 @@ This bundle lets you quickly get started with ProzillaOS without the hassle of i
 
 These libraries are different modules of ProzillaOS that can be installed separately. `@prozilla-os/core` and `@prozilla-os/shared` are also included in the `prozilla-os` bundle.
 
-- [`@prozilla-os/core`](./core/): Core functionality of ProzillaOS, with React components, hooks and a router.
-- [`@prozilla-os/skins`](./skins/): Customizable skins for ProzillaOS that can override content and layout and dynamically load CSS.
-- [`@prozilla-os/shared`](./shared/): Common generic TypeScript functions and utilities (e.g., data manipulation, logging), not directly related to ProzillaOS.
-- [`@prozilla-os/dev-tools`](./dev-tools/): Tools for the development of anything related to ProzillaOS (e.g., ProzillaOS websites, ProzillaOS apps). Used extensively for the development of official ProzillaOS packages (e.g., shared configurations, testing utilities).
+| Package | Description |
+| --- | --- |
+| [`@prozilla-os/core`](./core/) | Core functionality of ProzillaOS, with React components, hooks and a router. |
+| [`@prozilla-os/skins`](./skins/) | Customizable skins for ProzillaOS that can override content and layout and dynamically load CSS. |
+| [`@prozilla-os/shared`](./shared/) | Common generic TypeScript functions and utilities (e.g., data manipulation, logging), not directly related to ProzillaOS. |
+| [`@prozilla-os/dev-tools`](./dev-tools/) | Tools for the development of anything related to ProzillaOS (e.g., ProzillaOS websites, ProzillaOS apps). Used extensively for the development of official ProzillaOS packages (e.g., shared configurations, testing utilities). |
 
 ## Applications
 
@@ -23,14 +25,16 @@ These libraries are different modules of ProzillaOS that can be installed separa
 
 These applications are included in the `prozilla-os` bundle.
 
-- [`@prozilla-os/file-explorer`](./apps/file-explorer/): File explorer app
-- [`@prozilla-os/terminal`](./apps/terminal/): Terminal/shell app
-- [`@prozilla-os/text-editor`](./apps/text-editor/): Text editor app
-- [`@prozilla-os/settings`](./apps/settings/): Settings app
-- [`@prozilla-os/media-viewer`](./apps/media-viewer/): Media viewer app
-- [`@prozilla-os/browser`](./apps/browser/): Browser app
-- [`@prozilla-os/calculator`](./apps/calculator/): Calculator app
-- [`@prozilla-os/app-center`](./apps/app-center/): App center
+| Package | Description |
+| --- | --- |
+| [`@prozilla-os/file-explorer`](./apps/file-explorer/) | File explorer app |
+| [`@prozilla-os/terminal`](./apps/terminal/) | Terminal/shell app |
+| [`@prozilla-os/text-editor`](./apps/text-editor/) | Text editor app |
+| [`@prozilla-os/settings`](./apps/settings/) | Settings app |
+| [`@prozilla-os/media-viewer`](./apps/media-viewer/) | Media viewer app |
+| [`@prozilla-os/browser`](./apps/browser/) | Browser app |
+| [`@prozilla-os/calculator`](./apps/calculator/) | Calculator app |
+| [`@prozilla-os/app-center`](./apps/app-center/) | App center |
 
 ### Secondary applications
 

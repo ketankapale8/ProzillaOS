@@ -1,5 +1,5 @@
 import type MarkdownIt from "markdown-it";
-import type { SymbolEntry, SymbolRegistry } from "./symbolRegistry";
+import type { SymbolCategory, SymbolEntry, SymbolRegistry } from "./symbolRegistry";
 
 /**
  * MarkdownIt plugin that adds links to symbols in inline code.
@@ -28,12 +28,14 @@ export function inlineCodeLinksPlugin(markdownIt: MarkdownIt, { registry }: { re
 
 			const children = token.children;
 			let linkDepth = 0;
+			let linkOpenIndex = -1;
 
 			for (let j = 0; j < children.length; j++) {
 				const child = children[j];
 
 				if (child.type === "link_open") {
 					linkDepth++;
+					linkOpenIndex = j;
 					continue;
 				}
 
@@ -42,28 +44,56 @@ export function inlineCodeLinksPlugin(markdownIt: MarkdownIt, { registry }: { re
 					continue;
 				}
 
-				if (child.type !== "code_inline" || linkDepth > 0)
+				if (child.type !== "code_inline")
 					continue;
 
 				const content = child.content.trim();
 				if (!content)
 					continue;
 
-				const symbolEntry = findSymbolEntry(registry, content);
+				if (content.startsWith("\"") && content.endsWith("\"")) {
+					const existingClass = child.attrGet("class") ?? "";
+					child.attrSet("class", `${existingClass} inline-string`);
+					continue;
+				}
 
-				if (!symbolEntry)
+				const entry = findSymbolEntry(registry, content);
+				if (!entry)
 					continue;
 
-				const openToken = new state.Token("link_open", "a", 1);
-				openToken.attrSet("href", symbolEntry.href);
-				openToken.attrSet("data-symbol", content);
-				const closeToken = new state.Token("link_close", "a", -1);
+				child.content = normalizeDisplayText(content, entry.type);
 
-				children.splice(j, 1, openToken, child, closeToken);
-				j += 2;
+				if (linkDepth > 0 && linkOpenIndex >= 0) {
+					const existingClass = children[linkOpenIndex].attrGet("class") ?? "";
+					children[linkOpenIndex].attrSet("data-symbol", content);
+					children[linkOpenIndex].attrSet("class", `${existingClass} symbol-link inline-symbol-link ${entry.type}-symbol`.trim());
+				} else {
+					const openToken = new state.Token("link_open", "a", 1);
+					openToken.attrSet("href", entry.href);
+					openToken.attrSet("data-symbol", content);
+					openToken.attrSet("class", `symbol-link inline-symbol-link ${entry.type}-symbol`);
+					const closeToken = new state.Token("link_close", "a", -1);
+
+					children.splice(j, 1, openToken, child, closeToken);
+					j += 2;
+				}
 			}
 		}
 	});
+}
+
+function normalizeDisplayText(content: string, type: SymbolCategory): string {
+	if (type === "component") {
+		const name = content.replace(/^<|\/?>$/g, "").trim();
+		return `<${name}/>`;
+	}
+
+	if (type === "function") {
+		const name = content.replace(/\(\)$/g, "").trim();
+		return `${name}()`;
+	}
+
+	return content;
 }
 
 function findSymbolEntry(registry: SymbolRegistry, content: string): SymbolEntry | undefined {

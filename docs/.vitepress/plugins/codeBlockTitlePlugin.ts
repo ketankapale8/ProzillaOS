@@ -1,5 +1,15 @@
 import type MarkdownIt from "markdown-it";
 
+const DOUBLE_SLASH_COMMENT_REGEX = /^\/\/\s*(.+)\s*$/;
+const LANGUAGE_TO_COMMENT_REGEX: Record<string, RegExp> = {
+	"js": DOUBLE_SLASH_COMMENT_REGEX,
+	"jsx": DOUBLE_SLASH_COMMENT_REGEX,
+	"ts": DOUBLE_SLASH_COMMENT_REGEX,
+	"tsx": DOUBLE_SLASH_COMMENT_REGEX,
+	"html": /^<!--\s*(.+)\s*-->$/,
+	"css": /^\/\*\s*(.+)\s*\*\/$/,
+};
+
 /**
  * MarkdownIt plugin that adds file titles to code blocks when the first line contains a comment with a file path.
  */
@@ -12,9 +22,9 @@ export function codeBlockTitlePlugin(markdownIt: MarkdownIt) {
 				continue;
 
 			const info = token.info;
-			const language = info.split(/\s+/)[0];
+			const language = info.split(/\s+/)[0].toLowerCase();
 			const rest = info.slice(language.length).trim();
-			if (rest && !rest.startsWith("{"))
+			if (!(language in LANGUAGE_TO_COMMENT_REGEX) || rest && !rest.startsWith("{"))
 				continue;
 
 			const content = token.content;
@@ -24,7 +34,8 @@ export function codeBlockTitlePlugin(markdownIt: MarkdownIt) {
 			if (!trimmedFirstLine)
 				continue;
 
-			const match = trimmedFirstLine.match(/^\/\/\s*(.+)$/);
+			const commentRegex = LANGUAGE_TO_COMMENT_REGEX[language];
+			const match = trimmedFirstLine.match(commentRegex);
 			if (!match)
 				continue;
 
@@ -41,7 +52,7 @@ export function codeBlockTitlePlugin(markdownIt: MarkdownIt) {
 				continue;
 
 			token.info = `${language} [${filePath}]${rest ? " " + rest : ""}`;
-			token.content = firstLineEnd >= 0 ? content.slice(firstLineEnd + 1) : "";
+			token.content = firstLineEnd >= 0 ? content.slice(firstLineEnd + 1).replace(/^(?:[ \t]*\n)+/, "") : "";
 		}
 	});
 }
