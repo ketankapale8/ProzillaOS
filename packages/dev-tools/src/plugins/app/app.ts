@@ -4,7 +4,7 @@ import react from "@vitejs/plugin-react-swc";
 import dts from "vite-plugin-dts";
 import cssInjectedByJs from "vite-plugin-css-injected-by-js";
 import { appMetadataPlugin } from "./appMetadata";
-import { DEFAULT_SHARED_PACKAGES, type SharedPackage } from "../shared/sharedPackages";
+import { discoverSharedSpecifiers } from "../_utils/package.utils";
 
 /**
  * Options for the {@link appPlugin}.
@@ -14,10 +14,10 @@ export interface AppPluginOptions {
 	entryPath: string;
 	/** CSS class name for the app's root element. */
 	appClass?: string;
-	/** Path to the TypeScript config for the build. Defaults to `"tsconfig.build.json"`. */
+	/** Path to the TypeScript build config. Defaults to "tsconfig.build.json". */
 	tsconfigPath?: string;
-	/** Shared packages to mark as external. Defaults to {@link DEFAULT_SHARED_PACKAGES}. */
-	sharedPackages?: SharedPackage[];
+	/** Shared package specifiers to mark as external. Auto-discovered from package.json when omitted. */
+	sharedPackages?: string[];
 	/** Additional external patterns (strings or RegExps) beyond the shared package specifiers. */
 	externalPatterns?: (string | RegExp)[];
 }
@@ -39,7 +39,7 @@ export function appPlugin(options: AppPluginOptions): PluginOption[] {
 		entryPath,
 		appClass,
 		tsconfigPath = "tsconfig.build.json",
-		sharedPackages = DEFAULT_SHARED_PACKAGES,
+		sharedPackages,
 		externalPatterns = [],
 	} = options;
 
@@ -57,8 +57,10 @@ export function appPlugin(options: AppPluginOptions): PluginOption[] {
 		{
 			name: "prozilla-os-app",
 			config(config) {
-				const root = config.root || process.cwd();
+				const root = config.root ?? process.cwd();
 				const entryFile = resolve(root, entryPath);
+
+				const resolvedSpecifiers = sharedPackages ?? discoverSharedSpecifiers(root);
 
 				return {
 					build: {
@@ -68,7 +70,7 @@ export function appPlugin(options: AppPluginOptions): PluginOption[] {
 						},
 						rollupOptions: {
 							external: [
-								...sharedPackages.map((sharedPackage) => sharedPackage.specifier),
+								...resolvedSpecifiers,
 								...externalPatterns,
 							],
 							output: {

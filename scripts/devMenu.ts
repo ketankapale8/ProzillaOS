@@ -15,6 +15,7 @@ async function main() {
 			{ name: "Start demo", value: "demo:start", key: "s" },
 			{ name: "Start docs", value: "docs:start", key: "d" },
 			{ name: "Run tests", value: "test", key: "t" },
+			{ name: "Preview build", value: "preview", key: "p" },
 			{ name: "None", value: "", key: "n" },
 		],
 	});
