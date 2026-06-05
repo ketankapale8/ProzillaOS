@@ -32,6 +32,11 @@ export interface InteractiveListConfig {
 	 * @default true
 	 */
 	hideCursor?: boolean;
+	/**
+	 * Whether to horizontally align the shortcuts in the list of choices.
+	 * @default false
+	 */
+	alignShortcuts?: boolean;
 }
 
 /**
@@ -51,16 +56,27 @@ export interface InteractiveListConfig {
  * ```
  */
 export const interactiveListPrompt = async (config: InteractiveListConfig) => {
+	const renderKey = ({ key }: InteractiveListChoice) => Ansi.dim(`(${Ansi.bold(key)})`);
 	const {
-		renderSelected = (choice: InteractiveListChoice) => Ansi.green(`❯ ${choice.name} (${choice.key})`),
-		renderUnselected = (choice: InteractiveListChoice) => `  ${choice.name} (${choice.key})`,
+		renderSelected = (choice: InteractiveListChoice) => Ansi.green(`❯ ${renderKey(choice)} ${choice.name}`),
+		renderUnselected = (choice: InteractiveListChoice) => `  ${renderKey(choice)} ${choice.name}`,
 	} = config;
 
 	return await createPrompt<string, InteractiveListConfig>((config, done) => {
-		const { choices, default: defaultValue, hideCursor = true } = config;
+		const { choices, default: defaultValue, hideCursor = true, alignShortcuts = false } = config;
 		const [status, setStatus] = useState<"pending" | "done">("pending");
 		const [index, setIndex] = useState(defaultValue === null ? -1 : defaultValue === undefined ? 0 : choices.findIndex((choice) => choice.value === defaultValue));
 		const prefix = usePrefix({});
+
+		if (alignShortcuts) {
+			let maxChoiceNameLength = 0;
+			for (const choice of choices) {
+				maxChoiceNameLength = Math.max(maxChoiceNameLength, choice.name.length);
+			}
+			for (const choice of choices) {
+				choice.name = choice.name + " ".repeat(maxChoiceNameLength - choice.name.length);
+			}
+		}
 
 		useKeypress((key, _rl) => {
 			if (isEnterKey(key)) {
