@@ -7,6 +7,22 @@ const REACT_ELEMENT = Symbol.for("react.element");
 const REACT_FRAGMENT = Symbol.for("react.fragment");
 
 /**
+ * A plugin for formatting functions.
+ * @see {@link format}
+ */
+export interface FormatPlugin {
+	/** The name of this plugin. */
+	name: string,
+	/** A hook that configures the formatting options, before any formatting functions. */
+	config?: (options: ResolvedFormatOptions) => void;
+	/** A hook that runs before any formatting function. */
+	first?: (value: unknown, options: ResolvedFormatOptions) => string | undefined;
+	/** A hook that runs if a value could not be formatted. */
+	fallback?: (value: unknown, options: ResolvedFormatOptions) => string | undefined;
+	// transform?: (input: string, context: FormatPluginContext & { value: unknown }) => string | undefined;
+}
+
+/**
  * Configuration options for formatting functions.
  * @see {@link format}
  */
@@ -58,7 +74,7 @@ export interface FormatOptions {
 	 * @default true
 	 */
 	spaceAfterComma?: boolean;
-	plugins?: ((value: unknown, options: Required<FormatOptions>) => string | undefined)[];
+	plugins?: FormatPlugin[];
 	stringColor?: string | null;
 	numberColor?: string | null;
 	booleanColor?: string | null;
@@ -76,13 +92,19 @@ export interface FormatOptions {
 	delimiterColor?: string | null;
 }
 
-type NormalizedFormatOptions = Required<FormatOptions>;
-interface FormatContext extends NormalizedFormatOptions {
+export interface ResolvedFormatOptions extends Required<FormatOptions> {
+	/** Returns a formatted delimiter string. */
+	delimiter: (delimiter: string) => string;
+	/** Returns a formatted separator string. */
+	separator: () => string;
+	// /** Applies color to the given string, if {@link ResolvedFormatOptions.colors} is `true`. */
+	// color: (text: string, colorCode: string | undefined | null) => string;
+}
+
+interface FormatContext extends ResolvedFormatOptions {
 	[CONTEXT]: true;
 	currentDepth: number;
 	seen: WeakSet<object>;
-	delimiter: (delimiter: string) => string;
-	separator: () => string;
 }
 
 export interface ReactElementLike {
@@ -91,7 +113,7 @@ export interface ReactElementLike {
 	key?: string | null;
 }
 
-const DEFAULT_OPTIONS: NormalizedFormatOptions = {
+const DEFAULT_OPTIONS: Required<FormatOptions> = {
 	colors: true,
 	depth: 2,
 	maxArrayLength: 100,
@@ -188,6 +210,14 @@ export function format(value: unknown, options?: FormatOptions): string {
 		return color("Promise { <pending> }", context.functionColor, context.colors);
 	if (isObject(value))
 		return formatObject(value, context);
+
+	for (const plugin of context.plugins) {
+		if (plugin.fallback) {
+			const result = plugin.fallback(value, context);
+			if (result !== undefined)
+				return result;
+		}
+	}
 
 	return Object.prototype.toString.call(value);
 }
@@ -520,9 +550,16 @@ function resolveContext(value: unknown, options?: FormatOptions): string | Forma
 	
 	// TODO: Add every value to the seen map and only run plugins once for every value
 	for (const plugin of context.plugins) {
-		const result = plugin(value, context);
-		if (result !== undefined)
-			return result;
+		if (plugin.config)
+			plugin.config( context);
+	}
+	
+	for (const plugin of context.plugins) {
+		if (plugin.first) {
+			const result = plugin.first(value, context);
+			if (result !== undefined)
+				return result;
+		}
 	}
 
 	return context;

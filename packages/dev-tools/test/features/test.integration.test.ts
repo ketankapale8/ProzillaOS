@@ -1,4 +1,4 @@
-import { Assertion, test as base, describe, expect } from "vitest";
+import { test as base, describe, expect } from "vitest";
 import { extend } from "../../src/features";
 
 /**
@@ -45,7 +45,7 @@ describe("cases", () => {
 		]);
 	});
 
-	describe("with throws", () => {
+	describe("with error matchers", () => {
 		const parsePositive = (x: number) => {
 			if (x <= 0)
 				throw new RangeError("Must be positive");
@@ -59,13 +59,12 @@ describe("cases", () => {
 		]);
 	});
 
-	describe("with verify", () => {
-		const getArray = () => [1, 2, 3];
-		const hasThreeElements = (actual: Assertion<number[]>) => actual.toHaveLength(3);
-
-		test.simpleCases(getArray, [
-			[undefined, test.verify(hasThreeElements)],
-			[undefined, test.truthy()],
+	describe("with assertion matchers", () => {
+		const scream = (times: number) => "A".repeat(times);
+		test.simpleCases(scream, [
+			[3, test.assert((actual) => actual.toHaveLength(3), "to have length 3")],
+			[2, test.truthy()],
+			[0, test.falsy()],
 		]);
 	});
 });

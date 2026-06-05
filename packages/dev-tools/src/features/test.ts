@@ -1,23 +1,46 @@
 import { Assertion, expect, TestAPI } from "vitest";
-import { formatFunctionCall, FormatOptions } from "@prozilla-os/shared/logging";
+import { formatFunctionCall, FormatOptions, Ansi, format, formatFunction, FormatPlugin } from "@prozilla-os/shared/logging";
 import { mergeDeep } from "@prozilla-os/shared/utils";
-import { formatFunction } from "@prozilla-os/shared";
 
-const THROWS = Symbol("throws");
-const VERIFY = Symbol("verify");
+const MATCH_ERROR = Symbol("matchError");
+const MATCH_ASSERTION = Symbol("matchAssertion");
 
-export interface ThrowsExpectation {
-    readonly [THROWS]: true;
+/**
+ * Defines the matching criteria for a test case that expects the function to throw an error.
+ * @see {@link Matcher}
+ * @see {@link CustomTestAPI.throws}
+ */
+export interface ErrorMatcher {
+    readonly [MATCH_ERROR]: true;
+	/** The type of error the function should throw. */
     readonly error: new (...args: never[]) => Error;
+	/** The message the error thrown by the function should have. */
     readonly message?: string | RegExp;
 }
 
-export interface VerifyExpectation<R> {
-    readonly [VERIFY]: true;
+/**
+ * Defines the matching criteria for a test case using an assertion.
+ * @see {@link Matcher}
+ * @see {@link CustomTestAPI.assert}
+ */
+export interface AssertionMatcher<R> {
+    readonly [MATCH_ASSERTION]: true;
+	/** The assertion that defines the matching criteria for this test. */
     readonly assert: (actual: Assertion<R>) => void;
+	/** The name of this assertion. */
+	readonly name?: string;
 }
 
-export type Expectation<R = undefined> = R | ThrowsExpectation | VerifyExpectation<R>;
+/**
+ * Defines the matching criteria for a test case.
+ * 
+ * This can either be a plain return value, in which case the test will fail if the function returns a different value,
+ * or more complex criteria that determines whether the test will fail. 
+ * E.g., an {@link ErrorMatcher} will fail if the function does not throw an error of a certain type and with a certain message.
+ * @param R - The type of value the function being tested returns.
+ * @see {@link CustomTestAPI.cases}
+ */
+export type Matcher<R = undefined> = R | ErrorMatcher | AssertionMatcher<R>;
 
 /**
  * Configuration options for the {@link CustomTestAPI}.
@@ -35,7 +58,7 @@ export interface CustomTestAPI {
 	/**
 	 * A shorthand for {@link CustomTestAPI.cases} that tests a function with a single parameter.
 	 * @param func - The function to test.
-	 * @param cases - An array of tuples. Each tuple consisting of a parameter and the corresponding expected return value.
+	 * @param cases - An array of tuples. Each tuple consisting of a parameter and the corresponding matching criteria.
 	 * @typeParam A - The type of parameter the function accepts.
 	 * @typeParam R - The type of value the function returns.
 	 * @example
@@ -45,15 +68,24 @@ export interface CustomTestAPI {
 	 * 	[2, true],
 	 * ]);
 	 */
-	simpleCases: <A = unknown, R = undefined>(func: (arg: A) => R, cases: [A, Expectation<R>][]) => void;
+	simpleCases: <A = unknown, R = undefined>(func: (arg: A) => R, cases: [A, Matcher<R>][]) => void;
 	/**
-	 * Tests each case in the array by calling the function with the first element of the tuple and comparing 
-	 * the return value with the second element of the tuple.
+	 * A shorthand for {@link CustomTestAPI.case} that tests a function with a single parameter.
+	 * @param func - The function to test.
+	 * @param arg - The parameter to pass to the function.
+	 * @param matcher - The matching criteria.
+	 * @typeParam A - The type of parameter the function accepts.
+	 * @typeParam R - The type of value the function returns.
+	 */
+	simpleCase: <A = unknown, R = undefined>(func: (arg: A) => R, arg: A, matcher: Matcher<R>) => void;
+	/**
+	 * Tests each case in the array by calling the function with the first element of the tuple and checking its behaviour
+	 * or return value against the matching criteria in the second element.
 	 * 
 	 * This is a wrapper around {@link TestAPI.each} that handles test naming, function calling and assertions for you, 
 	 * so you can write more parameterized tests with less code.
 	 * @param func - The function to test.
-	 * @param cases - An array of tuples. Each tuple consisting of an array of parameters and the corresponding expected return value.
+	 * @param cases - An array of tuples. Each tuple consisting of an array of parameters and the corresponding matching criteria.
 	 * @typeParam A - The types of parameters the function accepts.
 	 * @typeParam R - The type of value the function returns.
 	 * @example
@@ -63,30 +95,41 @@ export interface CustomTestAPI {
 	 * 	[[4, 4], true],
 	 * ]);
 	 */
-	cases: <A extends unknown[] = [], R = undefined>(func: (...args: A) => R, cases: [A, Expectation<R>][]) => void;
-	simpleCase: <A = unknown, R = undefined>(func: (arg: A) => R, arg: A, expected: Expectation<R>) => void;
-	case: <A extends unknown[] = [], R = undefined>(func: (...args: A) => R, args: A, expected: Expectation<R>) => void;
+	cases: <A extends unknown[] = [], R = undefined>(func: (...args: A) => R, cases: [A, Matcher<R>][]) => void;
 	/**
-	 * Creates a special case that expects an error to be thrown.
+	 * Tests a single case by calling the function with the given parameters and checking its behaviour
+	 * or return value against the matching criteria.
+	 * 
+	 * This is the equivalent of {@link CustomTestAPI.cases}, but for a single test case.
+	 * @param func - The function to test.
+	 * @param args - The parameters to pass to the function.
+	 * @param matcher - The matching criteria.
+	 * @typeParam A - The types of parameters the function accepts.
+	 * @typeParam R - The type of value the function returns.
+	 */
+	case: <A extends unknown[] = [], R = undefined>(func: (...args: A) => R, args: A, matcher: Matcher<R>) => void;
+	/**
+	 * Creates matching criteria for a test case that expects an error to be thrown.
 	 * @param error - The type of error to expect.
 	 * @param message - The error message to expect.
 	 * @see {@link CustomTestAPI.cases}
 	*/
-	throws: (error: new (...args: never[]) => Error, message?: string | RegExp) => ThrowsExpectation;
+	throws: (error: new (...args: never[]) => Error, message?: string | RegExp) => ErrorMatcher;
 	/**
-	 * Creates a special case where the actual value is verified by the given assertion, 
+	 * Creates matching criteria for a test case where the actual value is verified by the given assertion, 
 	 * instead of simply being compared with an expected return value.
 	 * @param assert - The function that verifies the actual return value.
+	 * @param name - The name of the assertion.
 	 * @see {@link CustomTestAPI.cases}
 	*/
-	verify: <R>(assert: (actual: Assertion<R>) => void) => VerifyExpectation<R>;
-	/** Creates a special case that tests if the actual value is nullish (`null` or `undefined`). */
-	nullish: <R>() => VerifyExpectation<R>;
-	/** Creates a special case that tests if the actual value is [`falsy`](https://developer.mozilla.org/en-US/docs/Glossary/Falsy). */
-	falsy: <R>() => VerifyExpectation<R>;
-	/** Creates a special case that tests if the actual value is [`truthy`](https://developer.mozilla.org/en-US/docs/Glossary/Truthy). */
-	truthy: <R>() => VerifyExpectation<R>;
-	/** Negates the proceding test expectation. */
+	assert: <R>(assert: (actual: Assertion<R>) => void, name?: string) => AssertionMatcher<R>;
+	/** Creates matching criteria for a test case that expects the actual value to be nullish (`null` or `undefined`). */
+	nullish: <R>() => AssertionMatcher<R>;
+	/** Creates matching criteria for a test case that expects the actual value to be [`falsy`](https://developer.mozilla.org/en-US/docs/Glossary/Falsy). */
+	falsy: <R>() => AssertionMatcher<R>;
+	/** Creates matching criteria for a test case that expects the actual value to be [`truthy`](https://developer.mozilla.org/en-US/docs/Glossary/Truthy). */
+	truthy: <R>() => AssertionMatcher<R>;
+	/** Negates the proceding matching criteria for a test case. */
 	not: Pick<CustomTestAPI, "nullish" | "falsy" | "truthy">;
 }
 
@@ -97,13 +140,7 @@ export type ExtendedTestAPI<ExtraContext = object> = TestAPI<ExtraContext> & Cus
 
 const DEFAULT_CONFIG: Partial<CustomTestConfig> = {
 	format: {
-		plugins: [(value, options) => {
-			if (isThrowsExpectation(value)) {
-				return `expected to throw ${value.error.name}${value.message ? ": " + value.message : ""}`;
-			} else if (isVerifyExpectation(value)) {
-				return `verify with ${formatFunction(value.assert, options)}`;
-			}
-		}],
+		plugins: [testFormatPlugin()],
 	},
 };
 
@@ -154,7 +191,7 @@ export function extend<C = object>(test: TestAPI<C>, config: CustomTestConfig = 
 		cases: testCustomCases,
 		case: testCustomCase,
 		throws,
-		verify,
+		assert,
 		nullish,
 		falsy,
 		truthy,
@@ -166,7 +203,7 @@ export function extend<C = object>(test: TestAPI<C>, config: CustomTestConfig = 
 	} satisfies CustomTestAPI);
 }
 
-function testCases<C = object, A extends unknown[] = [], R = undefined>(test: TestAPI<C>, func: (...args: A) => R, cases: [A, Expectation<R>][], config: Readonly<CustomTestConfig>) {
+function testCases<C = object, A extends unknown[] = [], R = undefined>(test: TestAPI<C>, func: (...args: A) => R, cases: [A, Matcher<R>][], config: Readonly<CustomTestConfig>) {
 	return test.each(
 		cases.map(([args, expected]) => [
 			formatFunctionCall(func, args, expected, config.format),
@@ -178,46 +215,60 @@ function testCases<C = object, A extends unknown[] = [], R = undefined>(test: Te
 	});
 }
 
-function testCase<C = object, A extends unknown[] = [], R = undefined>(test: TestAPI<C>, func: (...args: A) => R, args: A, expected: Expectation<R>, config: Readonly<CustomTestConfig>) {
+function testCase<C = object, A extends unknown[] = [], R = undefined>(test: TestAPI<C>, func: (...args: A) => R, args: A, expected: Matcher<R>, config: Readonly<CustomTestConfig>) {
 	return test(formatFunctionCall(func, args, expected, config.format), () => {
 		testFunction(func, args, expected);
 	});
 }
 
-function testFunction<A extends unknown[] = [], R = undefined>(func: (...args: A) => R, args: A, expected: Expectation<R>) {
-	if (isThrowsExpectation(expected)) {
+function testFunction<A extends unknown[] = [], R = undefined>(func: (...args: A) => R, args: A, matcher: Matcher<R>) {
+	if (isErrorMatcher(matcher)) {
 		let caught: unknown;
 		try {
 			func(...args);
 		} catch (e) {
 			caught = e;
 		}
-		expect(caught).toBeInstanceOf(expected.error);
-		if (expected.message !== undefined)
-			expect((caught as Error).message).toMatch(expected.message);
+		expect(caught).toBeInstanceOf(matcher.error);
+		if (matcher.message !== undefined)
+			expect((caught as Error).message).toMatch(matcher.message);
 	} else {
 		const actual = expect(func(...args));
-		if (isVerifyExpectation(expected)) {
-			expected.assert(actual);
-		} else if (expected !== null && typeof expected === "object") { // Object or array
-			actual.toStrictEqual(expected);
+		if (isAssertionMatcher(matcher)) {
+			matcher.assert(actual);
+		} else if (matcher !== null && typeof matcher === "object") { // Object or array
+			actual.toStrictEqual(matcher);
 		} else {
-			actual.toBe(expected);
+			actual.toBe(matcher);
 		}
 	}
 }
 
-const throws: CustomTestAPI["throws"] = (error, message) => ({ [THROWS]: true, error, message });
-const verify: CustomTestAPI["verify"] = (assert) => ({ [VERIFY]: true, assert });
-const nullish: CustomTestAPI["falsy"] = () => verify((actual) => actual.toBeNullable());
-const nonNullish: CustomTestAPI["falsy"] = () => verify((actual) => actual.not.toBeNullable());
-const falsy: CustomTestAPI["falsy"] = () => verify((actual) => actual.toBeFalsy());
-const truthy: CustomTestAPI["falsy"] = () => verify((actual) => actual.toBeTruthy());
+const throws: CustomTestAPI["throws"] = (error, message) => ({ [MATCH_ERROR]: true, error, message });
+const assert: CustomTestAPI["assert"] = (assert, name) => ({ [MATCH_ASSERTION]: true, assert, name });
+const nullish: CustomTestAPI["falsy"] = () => assert((actual) => actual.toBeNullable(), "to be nullish");
+const nonNullish: CustomTestAPI["falsy"] = () => assert((actual) => actual.not.toBeNullable(), "to not be nullish");
+const falsy: CustomTestAPI["falsy"] = () => assert((actual) => actual.toBeFalsy(), "to be falsy");
+const truthy: CustomTestAPI["falsy"] = () => assert((actual) => actual.toBeTruthy(), "to be truthy");
 
-function isThrowsExpectation(value: unknown): value is ThrowsExpectation {
-	return typeof value === "object" && value !== null && THROWS in value;
+function isErrorMatcher(value: unknown): value is ErrorMatcher {
+	return typeof value === "object" && value !== null && MATCH_ERROR in value;
 }
 
-function isVerifyExpectation<R>(value: unknown): value is VerifyExpectation<R> {
-	return typeof value === "object" && value !== null && VERIFY in value;
+function isAssertionMatcher<R>(value: unknown): value is AssertionMatcher<R> {
+	return typeof value === "object" && value !== null && MATCH_ASSERTION in value;
 }
+
+function testFormatPlugin(): FormatPlugin {
+	return {
+		name: "test-format-plugin",
+		first: (value, options) => {
+			if (isErrorMatcher(value)) {
+				const error = (options.colors ? Ansi.red(value.error.name) : value.error.name) + (value.message ? ": " + format(value.message, options) : "");
+				return `to throw ${error}`;
+			} else if (isAssertionMatcher(value)) {
+				return value.name ?? `to match ${formatFunction(value.assert, options)}`;
+			}
+		},
+	};
+};

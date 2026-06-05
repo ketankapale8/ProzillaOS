@@ -51,7 +51,12 @@ test.cases(formatReactElement, [
 describe("formatting plugins", () => {
 	test("are executed before every format function", () => {
 		let count = 0;
-		const options: FormatOptions = { plugins: [() => (++count).toString()] };
+		const options: FormatOptions = {
+			plugins: [{
+				name: "plugin",
+				first: () => (++count).toString(),
+			}],
+		};
 
 		expect(format(null, options)).toBe("1");
 		expect(format(0, options)).toBe("2");
@@ -66,12 +71,13 @@ describe("formatting plugins", () => {
 		let count = 0;
 		const options: FormatOptions = {
 			colors: false,
-			plugins: [
-				(value) => {
+			plugins: [{
+				name: "plugin",
+				first: (value) => {
 					if (typeof value === "string")
 						return (++count).toString();
 				},
-			],
+			}],
 		};
 
 		expect(format(null, options)).toBe("null");
