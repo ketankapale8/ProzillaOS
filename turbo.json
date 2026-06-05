@@ -27,24 +27,28 @@
 		},
 		"//#root:stage": {
 			"outputs": ["dist/**"],
-			"outputLogs": "new-only"
+			"outputLogs": "new-only",
+			"env": ["RELEASE_PATH"]
 		},
 		"//#root:preview": {
 			"dependsOn": ["root:stage"],
 			"cache": false,
 			"persistent": true,
 			"outputLogs": "new-only",
-			"interruptible": true
+			"interruptible": true,
+			"env": ["RELEASE_PATH"]
 		},
 		"//#root:deploy": {
 			"dependsOn": ["root:stage"],
 			"cache": false,
-			"outputLogs": "new-only"
+			"outputLogs": "new-only",
+			"env": ["RELEASE_PATH"]
 		},
 		"//#root:deploy:dry": {
 			"dependsOn": ["root:stage"],
 			"cache": false,
-			"outputLogs": "new-only"
+			"outputLogs": "new-only",
+			"env": ["RELEASE_PATH"]
 		}
 	}
 }
