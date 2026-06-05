@@ -3,8 +3,13 @@ import viteConfig from "./vite.config";
 
 export default mergeConfig(viteConfig, defineProject({
 	test: {
+		name: "@prozilla-os/core jsdom",
 		setupFiles: "./test/setup.ts",
-		include: ["test/features/**/*.test.ts"],
-		exclude: ["test/features/_utils/react.utils.test.tsx"],
+		environment: "jsdom",
+		include: [
+			"test/components/**/*.test.{ts,tsx}",
+			"test/features/_utils/react.utils.test.tsx",
+			"test/hooks/**/*.test.{ts,tsx}",
+		],
 	},
 }));

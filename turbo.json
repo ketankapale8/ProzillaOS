@@ -8,10 +8,16 @@
 			"outputs": ["dist/**"],
 			"outputLogs": "new-only",
 		},
-		"test": {
+		"//#root:test": {
 			"dependsOn": ["@prozilla-os/dev-tools#build"],
-			"outputs": [],
-			"outputLogs": "new-only"
+			"cache": false,
+			"persistent": true,
+			"outputLogs": "new-only",
+			"interruptible": true
+		},
+		"//#root:test:ci": {
+			"dependsOn": ["@prozilla-os/dev-tools#build"],
+			"outputLogs": "new-only",
 		},
 		"lint": {
 			"dependsOn": ["^build"],

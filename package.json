@@ -19,7 +19,8 @@
 		"preview": "turbo run root:preview",
 		"deploy": "turbo run root:deploy",
 		"deploy:dry": "turbo run root:deploy:dry",
-		"test": "turbo run test",
+		"test": "turbo run root:test",
+		"test:ci": "turbo run root:test:ci",
 		"lint": "turbo run lint -- --fix",
 		"lint:nofix": "turbo run lint",
 		"clean": "rimraf --glob \"packages/*/{dist,.turbo}\" \"packages/apps/*/{dist,.turbo}\" \"{demo,docs}/{dist,.turbo}\" \"examples/*/{dist,.turbo}\" \".turbo\" \"dist\"",
@@ -41,7 +42,9 @@
 		"root:stage": "pnpm run build && rimraf dist && pnpm vite-node scripts/stageSite.ts",
 		"root:preview": "vite preview --outDir dist --port 8080",
 		"root:deploy": "pnpm vite-node scripts/publishSite.ts",
-		"root:deploy:dry": "pnpm vite-node scripts/publishSite.ts --dry"
+		"root:deploy:dry": "pnpm vite-node scripts/publishSite.ts --dry",
+		"root:test": "pnpm vitest",
+		"root:test:ci": "pnpm vitest --run"
 	},
 	"workspaces": [
 		"packages/*",
@@ -65,6 +68,10 @@
 		"@prozilla-os/core": "workspace:*",
 		"@prozilla-os/dev-tools": "workspace:*",
 		"@prozilla-os/shared": "workspace:*",
+		"@testing-library/dom": "^10.4.1",
+		"@testing-library/jest-dom": "^6.9.1",
+		"@testing-library/react": "^16.3.2",
+		"@testing-library/user-event": "^14.6.1",
 		"@types/eslint": "^8.56.12",
 		"@types/gh-pages": "^6.1.0",
 		"@types/node": "^20.19.39",
@@ -73,6 +80,7 @@
 		"eslint-plugin-react": "^7.37.5",
 		"eslint-plugin-react-refresh": "^0.4.26",
 		"gh-pages": "^6.3.0",
+		"jsdom": "^29.1.1",
 		"rimraf": "^5.0.10",
 		"stylelint": "^16.26.1",
 		"turbo": "^2.9.14",
@@ -80,7 +88,8 @@
 		"typescript-eslint": "^8.59.2",
 		"vite": "^7.3.2",
 		"vite-node": "^6.0.0",
-		"vite-plugin-checker": "^0.7.2"
+		"vite-plugin-checker": "^0.7.2",
+		"vitest": "^4.1.5"
 	},
 	"browserslist": {
 		"production": [

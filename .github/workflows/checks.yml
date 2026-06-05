@@ -39,4 +39,4 @@ jobs:
         run: pnpm run lint:nofix
 
       - name: Run tests
-        run: pnpm run test
+        run: pnpm run test:ci
