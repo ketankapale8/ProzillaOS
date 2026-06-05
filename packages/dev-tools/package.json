@@ -29,6 +29,7 @@
 	},
 	"scripts": {
 		"build": "tsc && vite build",
+		"test": "vitest",
 		"lint": "pnpm eslint ."
 	},
 	"repository": {
