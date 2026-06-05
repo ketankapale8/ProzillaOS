@@ -13,12 +13,23 @@ const REACT_FRAGMENT = Symbol.for("react.fragment");
 export interface FormatPlugin {
 	/** The name of this plugin. */
 	name: string,
-	/** A hook that configures the formatting options, before any formatting functions. */
+	/**
+	 * A hook that configures the formatting options, before any formatting functions.
+	 * @param options - The current formatting options.
+	 */
 	config?: (options: ResolvedFormatOptions) => void;
-	/** A hook that runs before any formatting function. */
-	first?: (value: unknown, options: ResolvedFormatOptions) => string | undefined;
-	/** A hook that runs if a value could not be formatted. */
-	fallback?: (value: unknown, options: ResolvedFormatOptions) => string | undefined;
+	/**
+	 * A hook that runs before any formatting function.
+	 * @param input - The input value.
+	 * @param context - The formatting context.
+	 */
+	first?: (input: unknown, context: ResolvedFormatOptions) => string | undefined;
+	/**
+	 * A hook that runs if a value could not be formatted.
+	 * @param input - The input value.
+	 * @param context - The formatting context.
+	 */
+	fallback?: (input: unknown, context: ResolvedFormatOptions) => string | undefined;
 	// transform?: (input: string, context: FormatPluginContext & { value: unknown }) => string | undefined;
 }
 
@@ -27,11 +38,6 @@ export interface FormatPlugin {
  * @see {@link format}
  */
 export interface FormatOptions {
-	/**
-	 * `true` enables ANSI colors in the formatted string.
-	 * @default true
-	 */
-	colors?: boolean;
 	/**
 	 * The maximum depth for representations of container values (e.g., objects, arrays).
 	 * @default 2
@@ -74,37 +80,128 @@ export interface FormatOptions {
 	 * @default true
 	 */
 	spaceAfterComma?: boolean;
+	/**
+	 * Plugins to extend, override or configure the formatting functions.
+	 */
 	plugins?: FormatPlugin[];
-	stringColor?: string | null;
-	numberColor?: string | null;
-	booleanColor?: string | null;
-	nullColor?: string | null;
-	undefinedColor?: string | null;
-	bigintColor?: string | null;
-	symbolColor?: string | null;
-	functionColor?: string | null;
-	keyColor?: string | null;
-	dateColor?: string | null;
-	regexpColor?: string | null;
-	errorColor?: string | null;
-	htmlTagColor?: string | null;
-	reactComponentColor?: string | null;
-	delimiterColor?: string | null;
+	/**
+	 * The {@link ANSI} color codes for different symbols.
+	 * 
+	 * Set to `false` to disable ANSI colors.
+	 */
+	colors?: false | {
+		/**
+		 * The color to apply to strings.
+		 * @default ANSI.fg.green
+		 */
+		string?: string | null;
+		/**
+		 * The color to apply to numbers.
+		 * @default ANSI.fg.yellow
+		 */
+		number?: string | null;
+		/**
+		 * The color to apply to booleans.
+		 * @default ANSI.fg.yellow
+		 */
+		boolean?: string | null;
+		/**
+		 * The color to apply to `null` keywords.
+		 * @default ANSI.decoration.dim + ANSI.fg.yellow
+		 */
+		null?: string | null;
+		/**
+		 * The color to apply to `undefined` keywords.
+		 * @default ANSI.decoration.dim + ANSI.fg.yellow
+		 */
+		undefined?: string | null;
+		/**
+		 * The color to apply to bigints.
+		 * @default ANSI.fg.yellow
+		 */
+		bigint?: string | null;
+		/**
+		 * The color to apply to symbols.
+		 * @default ANSI.fg.green
+		 */
+		symbol?: string | null;
+		/**
+		 * The color to apply to functions.
+		 * @default ANSI.fg.blue
+		 */
+		function?: string | null;
+		/**
+		 * The color to apply to keys.
+		 * @default ANSI.fg.white
+		 */
+		key?: string | null;
+		/**
+		 * The color to apply to dates.
+		 * @default ANSI.fg.magenta
+		 */
+		date?: string | null;
+		/**
+		 * The color to apply to {@link RegExp}s.
+		 * @default ANSI.fg.cyan
+		 */
+		regExp?: string | null;
+		/**
+		 * The color to apply to errors.
+		 * @default ANSI.fg.red
+		 */
+		error?: string | null;
+		/**
+		 * The color to apply to HTML tags.
+		 * @default ANSI.fg.red
+		 */
+		htmlTag?: string | null;
+		/**
+		 * The color to apply to React components.
+		 * @default ANSI.fg.yellow
+		 */
+		reactComponent?: string | null;
+		/**
+		 * The color to apply to delimiters.
+		 * @default ANSI.fg.cyan
+		 */
+		delimiter?: string | null;
+	};
 }
 
+/**
+ * The resolved formatting options combined with some utility functions for generating formatted strings.
+ * 
+ * Used internally by formatting functions and {@link FormatPlugin}s.
+ * @see {@link format}
+ */
 export interface ResolvedFormatOptions extends Required<FormatOptions> {
-	/** Returns a formatted delimiter string. */
+	/**
+	 * Returns a formatted delimiter string.
+	 * @param delimiter - The raw delimiter.
+	 */
 	delimiter: (delimiter: string) => string;
 	/** Returns a formatted separator string. */
 	separator: () => string;
-	// /** Applies color to the given string, if {@link ResolvedFormatOptions.colors} is `true`. */
-	// color: (text: string, colorCode: string | undefined | null) => string;
+	/**
+	 * Applies color to the given string, if {@link ResolvedFormatOptions.colors} is `true`.
+	 * @param text - The raw text.
+	 * @param colorCode - The ANSI color code to apply.
+	 */
+	color: (text: string, colorCode: string | undefined | null) => string;
+	/**
+	 * Applies the appropriate formatting to the given token.
+	 * @param token - The raw token.
+	 * @param type - The type of token.
+	 */
+	token: (token: string, type?: keyof Exclude<FormatOptions["colors"], false | undefined>) => string;
+	fork: () => ResolvedFormatOptions;
 }
 
 interface FormatContext extends ResolvedFormatOptions {
 	[CONTEXT]: true;
 	currentDepth: number;
 	seen: WeakSet<object>;
+	fork: () => FormatContext;
 }
 
 export interface ReactElementLike {
@@ -114,7 +211,6 @@ export interface ReactElementLike {
 }
 
 const DEFAULT_OPTIONS: Required<FormatOptions> = {
-	colors: true,
 	depth: 2,
 	maxArrayLength: 100,
 	maxStringLength: 80,
@@ -123,28 +219,30 @@ const DEFAULT_OPTIONS: Required<FormatOptions> = {
 	sortKeys: false,
 	singleQuotes: false,
 	spaceAfterComma: true,
-	stringColor: ANSI.fg.green,
-	numberColor: ANSI.fg.yellow,
-	booleanColor: ANSI.fg.yellow,
-	nullColor: ANSI.decoration.dim + ANSI.fg.yellow,
-	undefinedColor: ANSI.decoration.dim + ANSI.fg.yellow,
-	bigintColor: ANSI.fg.yellow,
-	symbolColor: ANSI.fg.green,
-	functionColor: ANSI.fg.blue,
-	keyColor: ANSI.fg.white,
-	dateColor: ANSI.fg.magenta,
-	regexpColor: ANSI.fg.cyan,
-	errorColor: ANSI.fg.red,
-	htmlTagColor: ANSI.fg.red,
-	reactComponentColor: ANSI.fg.yellow,
-	delimiterColor: ANSI.fg.cyan,
 	plugins: [],
+	colors: {
+		string: ANSI.fg.green,
+		number: ANSI.fg.yellow,
+		boolean: ANSI.fg.yellow,
+		null: ANSI.decoration.dim + ANSI.fg.yellow,
+		undefined: ANSI.decoration.dim + ANSI.fg.yellow,
+		bigint: ANSI.fg.yellow,
+		symbol: ANSI.fg.green,
+		function: ANSI.fg.blue,
+		key: ANSI.fg.white,
+		date: ANSI.fg.magenta,
+		regExp: ANSI.fg.cyan,
+		error: ANSI.fg.red,
+		htmlTag: ANSI.fg.red,
+		reactComponent: ANSI.fg.yellow,
+		delimiter: ANSI.fg.cyan,
+	},
 };
 
 /**
  * Formats a value into a human-readable string representation.
  * 
- * This is inteded for debugging purposes.
+ * This is intended for debugging purposes.
  * @param value - The value to represent.
  * @param options - Optional formatting options.
  * @returns The formatted string.
@@ -168,11 +266,11 @@ export function format(value: unknown, options?: FormatOptions): string {
 		return context;
 
 	if (value === null)
-		return color("null", context.nullColor, context.colors);
+		return context.token("null", "null");
 	if (value === undefined)
-		return color("undefined", context.undefinedColor, context.colors);
+		return context.token("undefined", "undefined");
 	if (typeof value === "boolean")
-		return color(String(value), context.booleanColor, context.colors);
+		return context.token(String(value), "boolean");
 	if (typeof value === "number") {
 		let string: string;
 		if (Number.isNaN(value)) {
@@ -182,14 +280,14 @@ export function format(value: unknown, options?: FormatOptions): string {
 		} else {
 			string = String(value);
 		}
-		return color(string, context.numberColor, context.colors);
+		return context.token(string, "number");
 	}
 	if (typeof value === "bigint")
-		return color(value + "n", context.bigintColor, context.colors);
+		return context.token(value + "n", "bigint");
 	if (typeof value === "string")
 		return formatString(value, context);
 	if (typeof value === "symbol")
-		return color(value.toString(), context.symbolColor, context.colors);
+		return context.token(value.toString(), "symbol");
 	if (typeof value === "function")
 		return formatFunction(value, context);
 	if (isReactElement(value))
@@ -197,9 +295,9 @@ export function format(value: unknown, options?: FormatOptions): string {
 	if (Array.isArray(value))
 		return formatArray(value, context);
 	if (value instanceof Date)
-		return color(value.toISOString(), context.dateColor, context.colors);
+		return context.token(value.toISOString(), "date");
 	if (value instanceof RegExp)
-		return color(value.toString(), context.regexpColor, context.colors);
+		return context.token(value.toString(), "regExp");
 	if (value instanceof Error)
 		return formatError(value, context);
 	if (value instanceof Map)
@@ -207,7 +305,7 @@ export function format(value: unknown, options?: FormatOptions): string {
 	if (value instanceof Set)
 		return formatSet(value, context);
 	if (value instanceof Promise)
-		return color("Promise { <pending> }", context.functionColor, context.colors);
+		return context.token("Promise { <pending> }", "function");
 	if (isObject(value))
 		return formatObject(value, context);
 
@@ -231,13 +329,13 @@ export function format(value: unknown, options?: FormatOptions): string {
  * @returns The formatted string.
  */
 export function formatFunctionCall<A extends unknown[] = [], R = undefined>(func: (...args: A) => R, args: A, returnValue: R, options?: FormatOptions): string {
-	const context = resolveContext(func, { ...options, depth: 3 });
+	const context = resolveContext(func, options);
 	if (typeof context === "string")
 		return context;
 
-	const formattedName = color(func.name || "(anonymous)", context.functionColor, context.colors);
-	const formattedArgs = args.map((arg) => format(arg, forkContext(context))).join(context.separator());
-	const formattedReturnValue = format(returnValue, forkContext(context));
+	const formattedName = context.token(func.name || "(anonymous)", "function");
+	const formattedArgs = args.map((arg) => format(arg, context.fork())).join(context.separator());
+	const formattedReturnValue = format(returnValue, context.fork());
 	const arrow = context.colors ? Ansi.dim("→") : "→";
 	return `${formattedName}(${formattedArgs}) ${arrow} ${formattedReturnValue}`;
 }
@@ -261,7 +359,7 @@ export function formatReactElement(element: ReactElementLike, options?: FormatOp
 	let name: string;
 	let isFragment = false;
 	if (typeof element.type === "string") {
-		name = color(element.type, context.htmlTagColor, context.colors);
+		name = context.token(element.type, "htmlTag");
 	} else if (element.type === REACT_FRAGMENT) {
 		name = "";
 		isFragment = true;
@@ -274,7 +372,7 @@ export function formatReactElement(element: ReactElementLike, options?: FormatOp
 		} else {
 			name = String(element.type);
 		}
-		name = color(name, context.reactComponentColor, context.colors);
+		name = context.token(name, "reactComponent");
 	}
 
 	const props: string[] = [];
@@ -316,12 +414,12 @@ function formatReactElementChild(child: unknown, context: FormatContext) {
 	if (typeof child === "number")
 		return child.toString();
 
-	return isReactElement(child) ? formatReactElement(child, forkContext(context)) : "";
+	return isReactElement(child) ? formatReactElement(child, context.fork()) : "";
 }
 
 function formatReactElementProp(key: string, value: unknown, context: FormatContext) {
-	const coloredKey = color(key, context.keyColor, context.colors);
-	return `${coloredKey}={${format(value, forkContext(context))}}`;
+	const coloredKey = context.token(key, "key");
+	return `${coloredKey}={${format(value, context.fork())}}`;
 }
 
 /**
@@ -346,12 +444,12 @@ export function formatString(string: string, options?: FormatOptions): string {
 
 	let escaped = JSON.stringify(truncated);
 	if (context.singleQuotes)
-		escaped = escaped.replace(/'/g, "\\'");
+		escaped = escaped.replace(/\\"/g, "\"").replace(/'/g, "\\'");
 
-	const inner = color(escaped.slice(1, -1), context.stringColor, context.colors);
+	const inner = context.token(escaped.slice(1, -1), "string");
 	const quote = context.delimiter(context.singleQuotes ? "'" : "\"");
 	const outer = quote + inner + quote;
-	return needsTruncation ? outer + color("...", context.nullColor, context.colors) : outer;
+	return needsTruncation ? outer + context.token("...", "null") : outer;
 }
 
 /**
@@ -367,7 +465,7 @@ export function formatFunction(func: Function, options?: FormatOptions): string 
 		return context;
 
 	const name = func.name || "(anonymous)";
-	return color(`[Function: ${name}]`, context.functionColor, context.colors);
+	return context.token(`[Function: ${name}]`, "function");
 }
 
 /**
@@ -395,12 +493,12 @@ export function formatArray(array: unknown[], options?: FormatOptions): string {
 	const length = Math.min(array.length, context.maxArrayLength);
 
 	for (let i = 0; i < length; i++) {
-		items.push(format(array[i], forkContext(context)));
+		items.push(format(array[i], context.fork()));
 	}
 
 	if (array.length > context.maxArrayLength) {
 		const remaining = array.length - context.maxArrayLength;
-		items.push(color(`... ${remaining} more item${remaining !== 1 ? "s" : ""}`, context.nullColor, context.colors));
+		items.push(context.token(`... ${remaining} more item${remaining !== 1 ? "s" : ""}`, "null"));
 	}
 
 	return formatInline(items, context, "[", "]");
@@ -434,8 +532,8 @@ export function formatObject(object: Record<PropertyKey, unknown>, options?: For
 		return context.delimiter("{}");
 
 	const entries = keys.map((key) => {
-		const formattedKey = color(key, context.keyColor, context.colors);
-		const formattedValue = format(object[key], forkContext(context));
+		const formattedKey = context.token(key, "key");
+		const formattedValue = format(object[key], context.fork());
 		return `${formattedKey}${context.delimiter(":")} ${formattedValue}`;
 	});
 
@@ -463,9 +561,9 @@ export function formatMap(map: Map<unknown, unknown>, options?: FormatOptions): 
 		return "Map(0) {}";
 
 	const entries: string[] = [];
-	const childOpts = forkContext(context);
 	for (const [key, value] of map) {
-		entries.push(`${format(key, childOpts)} => ${format(value, childOpts)}`);
+		const fork = context.fork();
+		entries.push(`${format(key, fork)} => ${format(value, fork)}`);
 	}
 
 	return formatInline(entries, context, `Map(${map.size}) { `, " }");
@@ -491,7 +589,7 @@ export function formatSet(set: Set<unknown>, options?: FormatOptions): string {
 
 	const items: string[] = [];
 	for (const item of set) {
-		items.push(format(item, forkContext(context)));
+		items.push(format(item, context.fork()));
 	}
 
 	return formatInline(items, context, `Set(${set.size}) { `, " }");
@@ -509,16 +607,15 @@ export function formatError(error: Error, options?: FormatOptions): string {
 		return context;
 
 	const name = error.name || "Error";
-	const message = error.message || "";
-	return color(`${name}: ${message}`, context.errorColor, context.colors);
+	return context.token(error.message ? `${name}: ${error.message}` : name, "error");
 }
 
 
 function guard(object: object, context: FormatContext, label: string): string | null {
 	if (context.seen.has(object))
-		return color("[Circular]", context.nullColor, context.colors);
+		return context.token("[Circular]", "null");
 	if (context.currentDepth > context.depth)
-		return color(label, context.nullColor, context.colors);
+		return context.token(label, "null");
 	context.seen.add(object);
 	return null;
 }
@@ -539,21 +636,27 @@ function resolveContext(value: unknown, options?: FormatOptions): string | Forma
 		context = options;
 	} else {
 		context = {
-			...options ? mergeDeep(DEFAULT_OPTIONS, { plugins: [], ...options }) : DEFAULT_OPTIONS,
+			// TODO: Fix mergeDeep so plugins and colors don't have to be duplicated here
+			...options ? mergeDeep(DEFAULT_OPTIONS, { plugins: DEFAULT_OPTIONS.plugins, colors: DEFAULT_OPTIONS.colors, ...options }) : DEFAULT_OPTIONS,
 			[CONTEXT]: true,
 			currentDepth: 0,
 			seen: new WeakSet(),
-			delimiter: (delimiter) => color(delimiter, context.delimiterColor, context.colors),
+			color: (text, colorCode) =>  context.colors && colorCode ? Ansi.apply(text, colorCode) : text,
+			token: (token, type) => type !== undefined && context.colors
+				? context.color(token, context.colors[type])
+				: token,
+			delimiter: (delimiter) => context.token(delimiter, "delimiter"),
 			separator: () => context.spaceAfterComma ? context.delimiter(",") + " " : context.delimiter(","),
+			fork: () => forkContext(context),
 		};
+
+		for (const plugin of context.plugins) {
+			if (plugin.config)
+				plugin.config( context);
+		}
 	}
 	
-	// TODO: Add every value to the seen map and only run plugins once for every value
-	for (const plugin of context.plugins) {
-		if (plugin.config)
-			plugin.config( context);
-	}
-	
+	// TODO: Add every value to the seen map and only run plugins once for every value	
 	for (const plugin of context.plugins) {
 		if (plugin.first) {
 			const result = plugin.first(value, context);
@@ -566,15 +669,13 @@ function resolveContext(value: unknown, options?: FormatOptions): string | Forma
 }
 
 function forkContext(context: FormatContext): FormatContext {
-	return { ...context, currentDepth: context.currentDepth + 1 };
+	const newContext = { ...context, currentDepth: context.currentDepth + 1 };
+	newContext.fork = () => forkContext(newContext);
+	return newContext;
 }
 
 function isContext(options: FormatOptions): options is FormatContext {
 	return CONTEXT in options;
-}
-
-function color(text: string, colorCode: string | undefined | null, enabled: boolean) {
-	return enabled && colorCode ? Ansi.apply(text, colorCode) : text;
 }
 
 function isReactElement(value: unknown): value is ReactElementLike {
