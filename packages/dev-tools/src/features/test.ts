@@ -1,5 +1,5 @@
 import { Assertion, expect, TestAPI } from "vitest";
-import { formatFunctionCall, FormatOptions, Ansi, format, formatFunction, FormatPlugin } from "@prozilla-os/shared/logging";
+import { inspectFunctionCall, InspectionOptions, Ansi, inspect, inspectFunction, InspectionPlugin } from "@prozilla-os/shared/logging";
 import { mergeDeep } from "@prozilla-os/shared/utils";
 
 const MATCH_ERROR = Symbol("matchError");
@@ -47,7 +47,7 @@ export type Matcher<R = undefined> = R | ErrorMatcher | AssertionMatcher<R>;
  */
 export interface CustomTestConfig {
 	/** Options for the formatting of test names. */
-	format?: FormatOptions;
+	format?: InspectionOptions;
 }
 
 /**
@@ -89,11 +89,32 @@ export interface CustomTestAPI {
 	 * @typeParam A - The types of parameters the function accepts.
 	 * @typeParam R - The type of value the function returns.
 	 * @example
+	 * ```ts
 	 * test.cases(isEqual, [
 	 * 	[[0, 1], false],
 	 * 	[[2, 3], false],
 	 * 	[[4, 4], true],
 	 * ]);
+	 * ```
+	 * ### Comparison with Vitest
+	 * Most functions will have simple unit tests like this:
+	 * ```ts
+	 * test.each([
+	 * 	[1, 1, 2],
+	 * 	[1, 2, 3],
+	 * 	[2, 1, 3],
+	 * ])("add(%i, %i) -> %i", (a, b, expected) => {
+	 * 	expect(a + b).toBe(expected)
+	 * })
+	 * ```
+	 * This is the same test, but using the `cases` wrapper instead:
+	 * ```ts
+	 * test.cases(add, [
+	 * 	[[1, 1], 2],
+	 * 	[[1, 2], 3],
+	 * 	[[2, 1], 3]
+	 * ]);
+	 * ```
 	 */
 	cases: <A extends unknown[] = [], R = undefined>(func: (...args: A) => R, cases: [A, Matcher<R>][]) => void;
 	/**
@@ -140,7 +161,7 @@ export type ExtendedTestAPI<ExtraContext = object> = TestAPI<ExtraContext> & Cus
 
 const DEFAULT_CONFIG: Partial<CustomTestConfig> = {
 	format: {
-		plugins: [testFormatPlugin()],
+		plugins: [testInspectPlugin()],
 	},
 };
 
@@ -168,13 +189,15 @@ const DEFAULT_CONFIG: Partial<CustomTestConfig> = {
  * 	[2, true],
  * ]);
  * ```
- * ### Config
+ * ### With configuration
  * ```ts
  * import { test as base } from "vitest";
  * 
  * export const test = extend(base, {
  * 	format: {
  * 		colors: false,
+ * 		singleQuotes: true,
+ * 		spaceAfterComma: false,
  * 	},
  * });
  * ```
@@ -206,7 +229,7 @@ export function extend<C = object>(test: TestAPI<C>, config: CustomTestConfig = 
 function testCases<C = object, A extends unknown[] = [], R = undefined>(test: TestAPI<C>, func: (...args: A) => R, cases: [A, Matcher<R>][], config: Readonly<CustomTestConfig>) {
 	return test.each(
 		cases.map(([args, expected]) => [
-			formatFunctionCall(func, args, expected, config.format),
+			inspectFunctionCall(func, args, expected, config.format),
 			args,
 			expected,
 		])
@@ -216,7 +239,7 @@ function testCases<C = object, A extends unknown[] = [], R = undefined>(test: Te
 }
 
 function testCase<C = object, A extends unknown[] = [], R = undefined>(test: TestAPI<C>, func: (...args: A) => R, args: A, expected: Matcher<R>, config: Readonly<CustomTestConfig>) {
-	return test(formatFunctionCall(func, args, expected, config.format), () => {
+	return test(inspectFunctionCall(func, args, expected, config.format), () => {
 		testFunction(func, args, expected);
 	});
 }
@@ -259,15 +282,15 @@ function isAssertionMatcher<R>(value: unknown): value is AssertionMatcher<R> {
 	return typeof value === "object" && value !== null && MATCH_ASSERTION in value;
 }
 
-function testFormatPlugin(): FormatPlugin {
+function testInspectPlugin(): InspectionPlugin {
 	return {
-		name: "test-format-plugin",
+		name: "test-inspect-plugin",
 		first: (value, options) => {
 			if (isErrorMatcher(value)) {
-				const error = (options.colors ? Ansi.red(value.error.name) : value.error.name) + (value.message ? ": " + format(value.message, options) : "");
+				const error = (options.colors ? Ansi.red(value.error.name) : value.error.name) + (value.message ? ": " + inspect(value.message, options) : "");
 				return `to throw ${error}`;
 			} else if (isAssertionMatcher(value)) {
-				return value.name ?? `to match ${formatFunction(value.assert, options)}`;
+				return value.name ?? `to match ${inspectFunction(value.assert, options)}`;
 			}
 		},
 	};

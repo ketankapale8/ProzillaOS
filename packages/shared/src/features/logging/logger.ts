@@ -1,5 +1,5 @@
 import { Ansi } from "./ansi";
-import { format, FormatOptions } from "./format";
+import { inspect, InspectionOptions } from "./format";
 
 /**
  * Applies a format to a string.
@@ -516,13 +516,13 @@ export class Logger {
 	 */
 	static createStringifier(type?: "basic"): Logger["stringify"]
 	/**
-	 * Creates a stringify function that uses {@link format} for any non-string value.
+	 * Creates a stringify function that uses {@link inspect} for any non-string value.
 	 * @param type - The type of stringify function to use.
-	 * @param options - The options for {@link format}.
+	 * @param options - The options for {@link inspect}.
 	 */
-	static createStringifier(type: "pretty", options?: FormatOptions): Logger["stringify"]
-	static createStringifier(type: "basic" | "pretty" = "basic", options?: FormatOptions): Logger["stringify"] {
-		return type === "basic" ? String : (value) => typeof value === "string" ? value : format(value, options);
+	static createStringifier(type: "pretty", options?: InspectionOptions): Logger["stringify"]
+	static createStringifier(type: "basic" | "pretty" = "basic", options?: InspectionOptions): Logger["stringify"] {
+		return type === "basic" ? String : (value) => typeof value === "string" ? value : inspect(value, options);
 	}
 
 }

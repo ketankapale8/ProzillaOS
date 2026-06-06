@@ -2,42 +2,48 @@ import { ANSI } from "../../constants";
 import { Ansi } from "./ansi";
 import { isObject, mergeDeep } from "../_utils";
 
-const CONTEXT = Symbol("formatContext");
+const CONTEXT = Symbol("inspectionContext");
 const REACT_ELEMENT = Symbol.for("react.element");
 const REACT_FRAGMENT = Symbol.for("react.fragment");
 
 /**
- * A plugin for formatting functions.
- * @see {@link format}
+ * A plugin for the inspection utilities.
+ * 
+ * Can be used to extend, override or configure the inspection process.
+ * Hook methods are called at different stages of the process and can seamlessly interact with it.
+ * 
+ * This is heavily inspired by [Vite's plugin API](https://vite.dev/guide/api-plugin) and follows a similar pattern.
+ * 
+ * @see {@link inspect}
  */
-export interface FormatPlugin {
+export interface InspectionPlugin {
 	/** The name of this plugin. */
 	name: string,
 	/**
-	 * A hook that configures the formatting options, before any formatting functions.
-	 * @param options - The current formatting options.
+	 * A hook that configures the inspection options before any values are inspected.
+	 * @param options - The current inspection options.
 	 */
-	config?: (options: ResolvedFormatOptions) => void;
+	config?: (options: ResolvedInspectionOptions) => void;
 	/**
-	 * A hook that runs before any formatting function.
+	 * A hook that is called before a value is inspected.
 	 * @param input - The input value.
-	 * @param context - The formatting context.
+	 * @param context - The inspection context.
 	 */
-	first?: (input: unknown, context: ResolvedFormatOptions) => string | undefined;
+	first?: (input: unknown, context: ResolvedInspectionOptions) => string | undefined;
 	/**
-	 * A hook that runs if a value could not be formatted.
+	 * A hook that is called if a value could not be inspected.
 	 * @param input - The input value.
-	 * @param context - The formatting context.
+	 * @param context - The inspection context.
 	 */
-	fallback?: (input: unknown, context: ResolvedFormatOptions) => string | undefined;
-	// transform?: (input: string, context: FormatPluginContext & { value: unknown }) => string | undefined;
+	fallback?: (input: unknown, context: ResolvedInspectionOptions) => string | undefined;
+	// transform?: (input: string, context: ResolvedInspectionOptions & { value: unknown }) => string | undefined;
 }
 
 /**
- * Configuration options for formatting functions.
- * @see {@link format}
+ * Configuration options for the inspection utilities.
+ * @see {@link inspect}
  */
-export interface FormatOptions {
+export interface InspectionOptions {
 	/**
 	 * The maximum depth for representations of container values (e.g., objects, arrays).
 	 * @default 2
@@ -81,9 +87,9 @@ export interface FormatOptions {
 	 */
 	spaceAfterComma?: boolean;
 	/**
-	 * Plugins to extend, override or configure the formatting functions.
+	 * Plugins to extend, override or configure the inspection process.
 	 */
-	plugins?: FormatPlugin[];
+	plugins?: InspectionPlugin[];
 	/**
 	 * The {@link ANSI} color codes for different symbols.
 	 * 
@@ -169,12 +175,12 @@ export interface FormatOptions {
 }
 
 /**
- * The resolved formatting options combined with some utility functions for generating formatted strings.
+ * The resolved inspection options combined with some utility functions for generating string representations.
  * 
- * Used internally by formatting functions and {@link FormatPlugin}s.
- * @see {@link format}
+ * Used internally by the inspection utilities and {@link InspectionPlugin}s.
+ * @see {@link inspect}
  */
-export interface ResolvedFormatOptions extends Required<FormatOptions> {
+export interface ResolvedInspectionOptions extends Required<InspectionOptions> {
 	/**
 	 * Returns a formatted delimiter string.
 	 * @param delimiter - The raw delimiter.
@@ -183,7 +189,7 @@ export interface ResolvedFormatOptions extends Required<FormatOptions> {
 	/** Returns a formatted separator string. */
 	separator: () => string;
 	/**
-	 * Applies color to the given string, if {@link ResolvedFormatOptions.colors} is `true`.
+	 * Applies color to the given string, if {@link ResolvedInspectionOptions.colors} is `true`.
 	 * @param text - The raw text.
 	 * @param colorCode - The ANSI color code to apply.
 	 */
@@ -193,15 +199,16 @@ export interface ResolvedFormatOptions extends Required<FormatOptions> {
 	 * @param token - The raw token.
 	 * @param type - The type of token.
 	 */
-	token: (token: string, type?: keyof Exclude<FormatOptions["colors"], false | undefined>) => string;
-	fork: () => ResolvedFormatOptions;
+	token: (token: string, type?: keyof Exclude<InspectionOptions["colors"], false | undefined>) => string;
+	/** Creates a new inspection context and increments the current depth. */
+	fork: () => ResolvedInspectionOptions;
 }
 
-interface FormatContext extends ResolvedFormatOptions {
+interface InspectionContext extends ResolvedInspectionOptions {
 	[CONTEXT]: true;
 	currentDepth: number;
 	seen: WeakSet<object>;
-	fork: () => FormatContext;
+	fork: () => InspectionContext;
 }
 
 export interface ReactElementLike {
@@ -210,7 +217,7 @@ export interface ReactElementLike {
 	key?: string | null;
 }
 
-const DEFAULT_OPTIONS: Required<FormatOptions> = {
+const DEFAULT_OPTIONS: Required<InspectionOptions> = {
 	depth: 2,
 	maxArrayLength: 100,
 	maxStringLength: 80,
@@ -240,27 +247,29 @@ const DEFAULT_OPTIONS: Required<FormatOptions> = {
 };
 
 /**
- * Formats a value into a human-readable string representation.
+ * Generates a human-readable string representation of a value.
  * 
- * This is intended for debugging purposes.
- * @param value - The value to represent.
- * @param options - Optional formatting options.
- * @returns The formatted string.
+ * This is intended for debugging purposes. 
+ * It is an alternative to {@link https://nodejs.org/api/util.html#utilinspectobject-options util.inspect}, that supports more customization of the output.
+ * 
+ * @param value - The value to inspect.
+ * @param options - Optional inspection options.
+ * @returns The resulting string.
  * @example
  * **Note:** The following examples omit the `options` parameter for simplicity. In reality, the return values will contain ANSI escape codes unless you explicitly set `colors` to `false`.
  * ```tsx
  * // Supports primitive values.
- * format(null) === "null"
- * format("example") === "\"example\""
+ * inspect(null) === "null"
+ * inspect("example") === "\"example\""
  * 
  * // Supports objects and arrays (and other containers).
- * format({ size: 2, values: [true, false] }) === "{ size: 2, values: [true, false] }"
+ * inspect({ size: 2, values: [true, false] }) === "{ size: 2, values: [true, false] }"
  * 
  * // Even supports React nodes.
- * format(<h1>Example</h1>) === "<h1>Example</h1>"
+ * inspect(<h1>Example</h1>) === "<h1>Example</h1>"
  * ```
  */
-export function format(value: unknown, options?: FormatOptions): string {
+export function inspect(value: unknown, options?: InspectionOptions): string {
 	const context = resolveContext(value, options);
 	if (typeof context === "string")
 		return context;
@@ -285,29 +294,29 @@ export function format(value: unknown, options?: FormatOptions): string {
 	if (typeof value === "bigint")
 		return context.token(value + "n", "bigint");
 	if (typeof value === "string")
-		return formatString(value, context);
+		return inspectString(value, context);
 	if (typeof value === "symbol")
 		return context.token(value.toString(), "symbol");
 	if (typeof value === "function")
-		return formatFunction(value, context);
+		return inspectFunction(value, context);
 	if (isReactElement(value))
-		return formatReactElement(value, context);
+		return inspectReactElement(value, context);
 	if (Array.isArray(value))
-		return formatArray(value, context);
+		return inspectArray(value, context);
 	if (value instanceof Date)
 		return context.token(value.toISOString(), "date");
 	if (value instanceof RegExp)
 		return context.token(value.toString(), "regExp");
 	if (value instanceof Error)
-		return formatError(value, context);
+		return inspectError(value, context);
 	if (value instanceof Map)
-		return formatMap(value, context);
+		return inspectMap(value, context);
 	if (value instanceof Set)
-		return formatSet(value, context);
+		return inspectSet(value, context);
 	if (value instanceof Promise)
 		return context.token("Promise { <pending> }", "function");
 	if (isObject(value))
-		return formatObject(value, context);
+		return inspectObject(value, context);
 
 	for (const plugin of context.plugins) {
 		if (plugin.fallback) {
@@ -321,37 +330,37 @@ export function format(value: unknown, options?: FormatOptions): string {
 }
 
 /**
- * Formats a function call with its arguments and return value into a string representation.
- * @param func - The function to represent.
+ * Returns a string representation of a function call, its arguments and its return value.
+ * @param func - The function to inspect.
  * @param args - The arguments of the function call.
  * @param returnValue - The return value of the function call.
- * @param options - Optional formatting options.
- * @returns The formatted string.
+ * @param options - Optional inspection options.
+ * @returns The resulting string.
  */
-export function formatFunctionCall<A extends unknown[] = [], R = undefined>(func: (...args: A) => R, args: A, returnValue: R, options?: FormatOptions): string {
+export function inspectFunctionCall<A extends unknown[] = [], R = undefined>(func: (...args: A) => R, args: A, returnValue: R, options?: InspectionOptions): string {
 	const context = resolveContext(func, options);
 	if (typeof context === "string")
 		return context;
 
-	const formattedName = context.token(func.name || "(anonymous)", "function");
-	const formattedArgs = args.map((arg) => format(arg, context.fork())).join(context.separator());
-	const formattedReturnValue = format(returnValue, context.fork());
+	const inspectedName = context.token(func.name || "(anonymous)", "function");
+	const inspectedArgs = args.map((arg) => inspect(arg, context.fork())).join(context.separator());
+	const inspectedReturnValue = inspect(returnValue, context.fork());
 	const arrow = context.colors ? Ansi.dim("→") : "→";
-	return `${formattedName}(${formattedArgs}) ${arrow} ${formattedReturnValue}`;
+	return `${inspectedName}(${inspectedArgs}) ${arrow} ${inspectedReturnValue}`;
 }
 
 /**
- * Formats a React element into a string representation.
- * @param element - The React element to represent.
- * @param options - Optional formatting options.
- * @returns The formatted string.
+ * Returns a string representation of a React element.
+ * @param element - The React element to inspect.
+ * @param options - Optional inspection options.
+ * @returns The resulting string.
  * @example
  * **Note:** The following example omits the `options` parameter for simplicity. In reality, the return values will contain ANSI escape codes unless you explicitly set `colors` to `false`.
  * ```tsx
- * format(<h1>Example</h1>) === "<h1>Example</h1>"
+ * inspect(<h1>Example</h1>) === "<h1>Example</h1>"
  * ```
  */
-export function formatReactElement(element: ReactElementLike, options?: FormatOptions): string {
+export function inspectReactElement(element: ReactElementLike, options?: InspectionOptions): string {
 	const context = resolveContext(element, options);
 	if (typeof context === "string")
 		return context;
@@ -387,9 +396,9 @@ export function formatReactElement(element: ReactElementLike, options?: FormatOp
 			const value = element.props[key];
 			if (key === "children") {
 				const childArray = Array.isArray(value) ? value : [value];
-				children = childArray.map((child) => formatReactElementChild(child, context));
+				children = childArray.map((child) => inspectReactElementChild(child, context));
 			} else {
-				props.push(formatReactElementProp(key, value, context));
+				props.push(inspectReactElementProp(key, value, context));
 			}
 		}
 	}
@@ -397,14 +406,14 @@ export function formatReactElement(element: ReactElementLike, options?: FormatOp
 	const open = context.delimiter("<");
 	const close = context.delimiter(">");
 	const slash = context.delimiter("/");
-	const formattedProps = props.length ? " " + props.join(" ") : "";
+	const inspectedProps = props.length ? " " + props.join(" ") : "";
 	
 	return children.length || isFragment
-		? `${open}${name}${formattedProps}${close}${children.join("")}${open}${slash}${name}${close}`
-		: `${open}${name}${formattedProps}${slash}${close}`;
+		? `${open}${name}${inspectedProps}${close}${children.join("")}${open}${slash}${name}${close}`
+		: `${open}${name}${inspectedProps}${slash}${close}`;
 }
 
-function formatReactElementChild(child: unknown, context: FormatContext) {
+function inspectReactElementChild(child: unknown, context: InspectionContext) {
 	if (child == null || typeof child === "boolean")
 		return "";
 
@@ -414,27 +423,27 @@ function formatReactElementChild(child: unknown, context: FormatContext) {
 	if (typeof child === "number")
 		return child.toString();
 
-	return isReactElement(child) ? formatReactElement(child, context.fork()) : "";
+	return isReactElement(child) ? inspectReactElement(child, context.fork()) : "";
 }
 
-function formatReactElementProp(key: string, value: unknown, context: FormatContext) {
+function inspectReactElementProp(key: string, value: unknown, context: InspectionContext) {
 	const coloredKey = context.token(key, "key");
-	return `${coloredKey}={${format(value, context.fork())}}`;
+	return `${coloredKey}={${inspect(value, context.fork())}}`;
 }
 
 /**
- * Formats a string into a string representation.
- * @param string - The string to represent.
- * @param options - Optional formatting options.
- * @returns The formatted string.
+ * Generates a literal string representation of a string.
+ * @param string - The string to inspect.
+ * @param options - Optional inspection options.
+ * @returns The resulting string.
  * @example
  * **Note:** The following examples omit or shorten the `options` parameter for simplicity. In reality, the return values will contain ANSI escape codes unless you explicitly set `colors` to `false`.
  * ```ts
- * format("Example") === "\"Example\""
- * format("Example", { singleQuotes: true }) === "'Example'"
+ * inspect("Example") === "\"Example\""
+ * inspect("Example", { singleQuotes: true }) === "'Example'"
  * ```
  */
-export function formatString(string: string, options?: FormatOptions): string {
+export function inspectString(string: string, options?: InspectionOptions): string {
 	const context = resolveContext(string, options);
 	if (typeof context === "string")
 		return context;
@@ -453,13 +462,13 @@ export function formatString(string: string, options?: FormatOptions): string {
 }
 
 /**
- * Formats a function into a string representation.
- * @param func - The function to represent.
- * @param options - Optional formatting options.
- * @returns The formatted string.
+ * Returns a string representation of a function.
+ * @param func - The function to inspect.
+ * @param options - Optional inspection options.
+ * @returns The resulting string.
  */
 // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
-export function formatFunction(func: Function, options?: FormatOptions): string {
+export function inspectFunction(func: Function, options?: InspectionOptions): string {
 	const context = resolveContext(func, options);
 	if (typeof context === "string")
 		return context;
@@ -469,18 +478,18 @@ export function formatFunction(func: Function, options?: FormatOptions): string 
 }
 
 /**
- * Formats an array into a string representation.
- * @param array - The array to represent.
- * @param options - Optional formatting options.
- * @returns The formatted string.
+ * Returns a string representation of an array.
+ * @param array - The array to inspect.
+ * @param options - Optional inspection options.
+ * @returns The resulting string.
  * @example
  * **Note:** The following examples omit or shorten the `options` parameter for simplicity. In reality, the return values will contain ANSI escape codes unless you explicitly set `colors` to `false`.
  * ```ts
- * format([1, 2, 3]) === "[1, 2, 3]"
- * format([1, 2, 3], { spaceAfterComma: false }) === "[1,2,3]"
+ * inspect([1, 2, 3]) === "[1, 2, 3]"
+ * inspect([1, 2, 3], { spaceAfterComma: false }) === "[1,2,3]"
  * ```
  */
-export function formatArray(array: unknown[], options?: FormatOptions): string {
+export function inspectArray(array: unknown[], options?: InspectionOptions): string {
 	const context = resolveContext(array, options);
 	if (typeof context === "string")
 		return context;
@@ -493,7 +502,7 @@ export function formatArray(array: unknown[], options?: FormatOptions): string {
 	const length = Math.min(array.length, context.maxArrayLength);
 
 	for (let i = 0; i < length; i++) {
-		items.push(format(array[i], context.fork()));
+		items.push(inspect(array[i], context.fork()));
 	}
 
 	if (array.length > context.maxArrayLength) {
@@ -505,17 +514,17 @@ export function formatArray(array: unknown[], options?: FormatOptions): string {
 }
 
 /**
- * Formats an object into a string representation.
- * @param object - The object to represent.
- * @param options - Optional formatting options.
- * @returns The formatted string.
+ * Returns a string representation of an object.
+ * @param object - The object to inspect.
+ * @param options - Optional inspection options.
+ * @returns The resulting string.
  * @example
  * **Note:** The following example omits the `options` parameter for simplicity. In reality, the return values will contain ANSI escape codes unless you explicitly set `colors` to `false`.
  * ```ts
- * format({ first: true, second: false }) === "{ first: true, second: false }"
+ * inspect({ first: true, second: false }) === "{ first: true, second: false }"
  * ```
  */
-export function formatObject(object: Record<PropertyKey, unknown>, options?: FormatOptions): string {
+export function inspectObject(object: Record<PropertyKey, unknown>, options?: InspectionOptions): string {
 	const context = resolveContext(object, options);
 	if (typeof context === "string")
 		return context;
@@ -528,13 +537,13 @@ export function formatObject(object: Record<PropertyKey, unknown>, options?: For
 	if (context.sortKeys)
 		keys = keys.sort();
 
-	if (keys.length === 0)
+	if (!keys.length)
 		return context.delimiter("{}");
 
 	const entries = keys.map((key) => {
-		const formattedKey = context.token(key, "key");
-		const formattedValue = format(object[key], context.fork());
-		return `${formattedKey}${context.delimiter(":")} ${formattedValue}`;
+		const inspectedKey = context.token(key, "key");
+		const inspectedValue = inspect(object[key], context.fork());
+		return `${inspectedKey}${context.delimiter(":")} ${inspectedValue}`;
 	});
 
 	const head = context.delimiter("{") + " ";
@@ -543,12 +552,12 @@ export function formatObject(object: Record<PropertyKey, unknown>, options?: For
 }
 
 /**
- * Formats a Map into a string representation.
- * @param map - The map to represent.
- * @param options - Optional formatting options.
- * @returns The formatted string.
+ * Returns a string representation of a map.
+ * @param map - The map to inspect.
+ * @param options - Optional inspection options.
+ * @returns The resulting string.
  */
-export function formatMap(map: Map<unknown, unknown>, options?: FormatOptions): string {
+export function inspectMap(map: Map<unknown, unknown>, options?: InspectionOptions): string {
 	const context = resolveContext(map, options);
 	if (typeof context === "string")
 		return context;
@@ -563,19 +572,19 @@ export function formatMap(map: Map<unknown, unknown>, options?: FormatOptions): 
 	const entries: string[] = [];
 	for (const [key, value] of map) {
 		const fork = context.fork();
-		entries.push(`${format(key, fork)} => ${format(value, fork)}`);
+		entries.push(`${inspect(key, fork)} => ${inspect(value, fork)}`);
 	}
 
 	return formatInline(entries, context, `Map(${map.size}) { `, " }");
 }
 
 /**
- * Formats a Set into a string representation.
- * @param set - The set to represent.
- * @param options - Optional formatting options.
- * @returns The formatted string.
+ * Returns a string representation of a set.
+ * @param set - The set to inspect.
+ * @param options - Optional inspection options.
+ * @returns The resulting string.
  */
-export function formatSet(set: Set<unknown>, options?: FormatOptions): string {
+export function inspectSet(set: Set<unknown>, options?: InspectionOptions): string {
 	const context = resolveContext(set, options);
 	if (typeof context === "string")
 		return context;
@@ -589,19 +598,19 @@ export function formatSet(set: Set<unknown>, options?: FormatOptions): string {
 
 	const items: string[] = [];
 	for (const item of set) {
-		items.push(format(item, context.fork()));
+		items.push(inspect(item, context.fork()));
 	}
 
 	return formatInline(items, context, `Set(${set.size}) { `, " }");
 }
 
 /**
- * Formats an Error into a string representation.
- * @param error - The error to represent.
- * @param options - Optional formatting options.
- * @returns The formatted string.
+ * Returns a string representation of an error.
+ * @param error - The error to inspect.
+ * @param options - Optional inspection options.
+ * @returns The resulting string.
  */
-export function formatError(error: Error, options?: FormatOptions): string {
+export function inspectError(error: Error, options?: InspectionOptions): string {
 	const context = resolveContext(error, options);
 	if (typeof context === "string")
 		return context;
@@ -611,7 +620,7 @@ export function formatError(error: Error, options?: FormatOptions): string {
 }
 
 
-function guard(object: object, context: FormatContext, label: string): string | null {
+function guard(object: object, context: InspectionContext, label: string): string | null {
 	if (context.seen.has(object))
 		return context.token("[Circular]", "null");
 	if (context.currentDepth > context.depth)
@@ -620,18 +629,22 @@ function guard(object: object, context: FormatContext, label: string): string | 
 	return null;
 }
 
-function formatInline(items: string[], context: FormatContext, head: string, tail: string): string {
+function formatInline(items: string[], context: InspectionContext, head: string, tail: string): string {
 	const inline = `${head}${items.join(context.separator())}${tail}`;
 	if (!context.compact && Ansi.strip(inline).length > context.breakLength) {
 		const indent = "\t".repeat(context.currentDepth + 1);
 		const closingIndent = "\t".repeat(context.currentDepth);
-		return `${head.replace(/ +$/, "")}\n${items.map((item) => `${indent}${item}`).join(",\n")}\n${closingIndent}${tail.replace(/^ +/, "")}`;
+		const formattedHead = head.replace(/\s+$/, "");
+		const formattedItems = items.map((item) => `${indent}${item}`).join(",\n");
+		const formattedTail = tail.replace(/^\s+/, "");
+		
+		return `${formattedHead}\n${formattedItems}\n${closingIndent}${formattedTail}`;
 	}
 	return inline;
 }
 
-function resolveContext(value: unknown, options?: FormatOptions): string | FormatContext {
-	let context: FormatContext;
+function resolveContext(value: unknown, options?: InspectionOptions): string | InspectionContext {
+	let context: InspectionContext;
 	if (options && isContext(options)) {
 		context = options;
 	} else {
@@ -641,7 +654,7 @@ function resolveContext(value: unknown, options?: FormatOptions): string | Forma
 			[CONTEXT]: true,
 			currentDepth: 0,
 			seen: new WeakSet(),
-			color: (text, colorCode) =>  context.colors && colorCode ? Ansi.apply(text, colorCode) : text,
+			color: (text, colorCode) => context.colors && colorCode ? Ansi.apply(text, colorCode) : text,
 			token: (token, type) => type !== undefined && context.colors
 				? context.color(token, context.colors[type])
 				: token,
@@ -652,11 +665,11 @@ function resolveContext(value: unknown, options?: FormatOptions): string | Forma
 
 		for (const plugin of context.plugins) {
 			if (plugin.config)
-				plugin.config( context);
+				plugin.config(context);
 		}
 	}
 	
-	// TODO: Add every value to the seen map and only run plugins once for every value	
+	// TODO: Add every value to the seen map and only run plugins once for every value
 	for (const plugin of context.plugins) {
 		if (plugin.first) {
 			const result = plugin.first(value, context);
@@ -668,13 +681,13 @@ function resolveContext(value: unknown, options?: FormatOptions): string | Forma
 	return context;
 }
 
-function forkContext(context: FormatContext): FormatContext {
+function forkContext(context: InspectionContext): InspectionContext {
 	const newContext = { ...context, currentDepth: context.currentDepth + 1 };
 	newContext.fork = () => forkContext(newContext);
 	return newContext;
 }
 
-function isContext(options: FormatOptions): options is FormatContext {
+function isContext(options: InspectionOptions): options is InspectionContext {
 	return CONTEXT in options;
 }
 

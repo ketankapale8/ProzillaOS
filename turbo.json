@@ -8,6 +8,13 @@
 			"outputs": ["dist/**"],
 			"outputLogs": "new-only",
 		},
+		"start": {
+			"dependsOn": ["^build"],
+			"cache": false,
+			"persistent": true,
+			"outputLogs": "new-only",
+			"interruptible": true
+		},
 		"//#root:test": {
 			"dependsOn": ["@prozilla-os/dev-tools#build"],
 			"cache": false,
@@ -19,17 +26,15 @@
 			"dependsOn": ["@prozilla-os/dev-tools#build"],
 			"outputLogs": "new-only",
 		},
-		"lint": {
-			"dependsOn": ["^build"],
+		"//#root:lint": {
+			"dependsOn": ["prozilla-os#build"],
 			"outputs": [],
 			"outputLogs": "new-only"
 		},
-		"start": {
-			"dependsOn": ["^build"],
-			"cache": false,
-			"persistent": true,
-			"outputLogs": "new-only",
-			"interruptible": true
+		"//#root:lint:nofix": {
+			"dependsOn": ["prozilla-os#build"],
+			"outputs": [],
+			"outputLogs": "new-only"
 		},
 		"//#root:stage": {
 			"outputs": ["dist/**"],
