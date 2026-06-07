@@ -1,3 +1,9 @@
+<script setup lang="ts">
+import { useData } from "vitepress";
+
+const { frontmatter } = useData();
+</script>
+
 <template>
 	<div v-if="frontmatter.package">
 		<Badge class="package" type="info">
@@ -5,12 +11,6 @@
 		</Badge>
 	</div>
 </template>
-
-<script setup>
-import { useData } from "vitepress";
-
-const { frontmatter } = useData();
-</script>
 
 <style scoped>
 .package {

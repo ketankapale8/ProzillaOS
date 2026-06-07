@@ -109,7 +109,7 @@ export function packagePathToId(path: string): string {
 	return "@prozilla-os/" + name;
 }
 
-export const packageSidebars = (packages: PackageData[]): DefaultTheme.Sidebar => {
+export const getPackageSidebars = (packages: PackageData[]): DefaultTheme.Sidebar => {
 	const sidebar: DefaultTheme.Sidebar = {};
 
 	packages.forEach(({ text, link, items = [], auto = false }) => {
@@ -151,9 +151,14 @@ export const packageSidebars = (packages: PackageData[]): DefaultTheme.Sidebar =
 					text,
 					items: [
 						{ text: "Info", link: "/" },
-						...packageItems,
 					],
 				},
+				...packageItems.length
+					? [{
+						text: "API Reference",
+						items: packageItems,
+					}]
+					: [],
 			],
 		};
 	});
@@ -161,10 +166,13 @@ export const packageSidebars = (packages: PackageData[]): DefaultTheme.Sidebar =
 	return sidebar;
 };
 
-export const packageReferenceItems = (packages: PackageData[]): DefaultTheme.SidebarItem[] => {
+export const getPackageReferenceItems = (packages: PackageData[], excludeCategories?: PackageData["category"][]): DefaultTheme.SidebarItem[] => {
 	const categories: Record<string, DefaultTheme.SidebarItem> = {};
 
 	packages.forEach(({ text, link, category }) => {
+		if (excludeCategories && excludeCategories.includes(category))
+			return;
+
 		if (!Object.keys(categories).includes(category)) {
 			categories[category] = {
 				text: category,

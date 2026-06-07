@@ -1,7 +1,7 @@
 import { defineConfig, HeadConfig } from "vitepress";
-import { PACKAGES, packageSidebars } from "./packages.config";
+import { PACKAGES, getPackageSidebars } from "./packages.config";
 import { DESCRIPTION, IMAGE, LOCALE, TITLE } from "./meta.config";
-import { NAVIGATION } from "./nav.config";
+import { getNavigationItems, getSidebarItems } from "./nav.config";
 import lightbox from "vitepress-plugin-lightbox";
 import { SymbolRegistry } from "./plugins/symbolRegistry";
 import { inlineCodeLinksPlugin } from "./plugins/inlineCodeLinksPlugin";
@@ -9,54 +9,41 @@ import { codeBlockLinksPlugin } from "./plugins/codeBlockLinksPlugin";
 import { codeBlockTitlePlugin } from "./plugins/codeBlockTitlePlugin";
 import { groupIconMdPlugin, groupIconVitePlugin } from "vitepress-plugin-group-icons";
 
+export const DEV_MODE = process.env.NODE_ENV !== "production";
+
 const symbolRegistry = new SymbolRegistry();
 
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
 	title: TITLE,
 	description: DESCRIPTION,
-
 	srcDir: "src",
-
+	srcExclude: DEV_MODE ? [] : ["**/*.draft.md"],
 	base: "/docs/",
-
 	head: [
 		["link", { rel: "icon", href: "/docs/favicon.ico" }],
 		["link", { rel: "preconnect", href: "https://fonts.googleapis.com" }],
 		["link", { rel: "preconnect", href: "https://fonts.gstatic.com", crossorigin: "" }],
 		["link", { href: "https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&family=Roboto+Mono:ital,wght@0,100..700;1,100..700&display=swap", rel: "stylesheet" }],
 	],
-
 	cleanUrls: true,
-
 	outDir: "./dist",
-
 	sitemap: {
 		hostname: "https://os.prozilla.dev/docs/",
 	},
-
+	rewrites: {
+		...DEV_MODE ? { ":path(.*).draft.md": ":path.md" } : {},
+	},
 	themeConfig: {
 		// https://vitepress.dev/reference/default-theme-config
 		nav: [
 			{ text: "Demo", link: "https://os.prozilla.dev/", target: "_blank" },
-			...NAVIGATION.map(({ text: navigationText, base, items = [] }) => ({
-				text: navigationText,
-				base,
-				items: items.map(({ text = "", link = "" }) => ({
-					text,
-					link: base ? base + link : link,
-				})),
-			})),
+			...getNavigationItems(DEV_MODE),
 		],
-
-		sidebar: Object.assign(
-			{},
-			{
-				"/": NAVIGATION,
-				...packageSidebars(PACKAGES),
-			}
-		),
-
+		sidebar: {
+			"/": getSidebarItems(DEV_MODE),
+			...getPackageSidebars(PACKAGES),
+		},
 		editLink: {
 			pattern: ({ frontmatter }) => {
 				if ("editUrl" in frontmatter && typeof frontmatter.editUrl === "string") {
@@ -67,25 +54,20 @@ export default defineConfig({
 			},
 			text: "Suggest changes to this page",
 		},
-
 		socialLinks: [
 			{ icon: "github", link: "https://github.com/prozilla-os/ProzillaOS" },
 			{ icon: "discord", link: "https://discord.gg/JwbyQP4tdz" },
 			{ icon: "npm", link: "https://www.npmjs.com/package/prozilla-os" },
 		],
-
 		logo: {
 			dark: "/logo-light.svg",
 			light: "/logo-dark.svg",
 		},
-
 		siteTitle: "ProzillaOS",
-		
 		footer: {
 			message: "Built by <strong><a href=\"https://prozilla.dev/\" target=\"_blank\">Prozilla</a></strong>",
 			copyright: "Copyright &copy; 2023-present Prozilla",
 		},
-
 		search: {
 			provider: "local",
 			options: {
@@ -93,8 +75,10 @@ export default defineConfig({
 			},
 		},
 	},
-
 	transformPageData(pageData) {
+		if (DEV_MODE && pageData.filePath.endsWith(".draft.md"))
+			pageData.frontmatter.draft = true;
+
 		pageData.frontmatter.head ??= [] as HeadConfig[];
 		const head = pageData.frontmatter.head as HeadConfig[];
 
@@ -126,11 +110,9 @@ export default defineConfig({
 		head.push(["meta", { name: "og:type", content: "website" }]);
 		head.push(["meta", { name: "twitter:card", content: "summary_large_image" }]);
 	},
-
 	ignoreDeadLinks: [
 		/^https?:\/\/localhost/,
 	],
-
 	markdown: {
 		theme: {
 			dark: "material-theme",
@@ -154,7 +136,6 @@ export default defineConfig({
 			noteLabel: "Note",
 		},
 	},
-
 	vite: {
 		plugins: [groupIconVitePlugin()],
 	},

@@ -143,9 +143,9 @@ export class SymbolRegistry extends Map<string, SymbolEntry> {
 		}
 	}
 
-	resolveSymbol(name: string, category?: SymbolCategory) {
+	resolveSymbol(name: string, ...categories: SymbolCategory[]) {
 		const found = this.get(name);
-		if (found && (!category || found.type === category))
+		if (found && (!categories.length || categories.includes(found.type)))
 			return found;
 	}
 

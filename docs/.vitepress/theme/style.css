@@ -228,12 +228,13 @@
 	--vp-custom-block-details-code-bg: var(--vp-c-bg);
 }
 
-.custom-block {
+.vp-doc .custom-block {
 	--vp-code-block-bg: var(--vp-c-bg);
 
 	border: none;
 	border-left: 5px solid;
 	padding: 12px 12px 6px;
+	margin: 1.5rem 0;
 }
 
 .custom-block code {
@@ -451,6 +452,10 @@ li > p {
 	border-radius: var(--border-radius-1);
 }
 
+.vp-doc strong {
+	font-weight: 700;
+}
+
 .vp-doc [class*="language-"] > button.copy {
 	border-radius: var(--border-radius-1);
 }
@@ -534,4 +539,9 @@ a.inline-symbol-link.component-symbol > code {
 
 .vp-doc code.inline-string {
 	color: var(--green-0);
+}
+
+
+.vp-doc .custom-block.tip code.inline-string {
+	color: var(--vp-c-tip-1);
 }

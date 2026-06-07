@@ -1,7 +1,12 @@
 import type { DefaultTheme } from "vitepress";
-import { packageReferenceItems, PACKAGES } from "./packages.config";
+import { getPackageReferenceItems, PACKAGES } from "./packages.config";
 
-export const NAVIGATION: DefaultTheme.SidebarItem[] = [
+type SidebarItem = Omit<DefaultTheme.SidebarItem, "items"> & {
+    draft?: boolean;
+    items?: SidebarItem[];
+};
+
+const COMMON_ITEMS: SidebarItem[] = [
 	{
 		text: "About",
 		base: "/about",
@@ -19,23 +24,81 @@ export const NAVIGATION: DefaultTheme.SidebarItem[] = [
 		base: "/guides",
 		collapsed: false,
 		items: [
-			{ text: "Getting started", link: "/getting-started" },
-			{ text: "Custom app", link: "/custom-app" },
-			{ text: "Self-hosting", link: "/self-hosting" },
-			{ text: "Development", link: "/development" },
-		],
-	},
-	{
-		text: "Reference",
-		base: "/reference",
-		collapsed: false,
-		items: [
-			{ text: "Configuration", link: "/configuration" },
-			{ text: "Glossary", link: "/glossary" },
-			{ text: "Packages", link: "/packages" },
+			{ text: "Getting Started", link: "/getting-started" },
+			{ text: "App Development", link: "/custom-app" },
+			{ text: "File System", link: "/file-system" },
+			{ text: "Style Overrides", link: "/style-overrides", draft: true },
+			{ text: "Writing Tests", link: "/testing", draft: true },
+			{ text: "Logging and Debugging", link: "/logging", draft: true },
 			{
-				items: packageReferenceItems(PACKAGES),
+				text: "Advanced",
+				collapsed: true,
+				items: [
+					{ text: "Self-hosting", link: "/self-hosting" },
+					{ text: "Development", link: "/development" },
+				],
 			},
 		],
 	},
 ];
+
+export function getSidebarItems(isDev: boolean): DefaultTheme.SidebarItem[] {
+	return filterDrafts(
+		[
+			...COMMON_ITEMS,
+			{
+				text: "Packages",
+				base: "/reference",
+				collapsed: false,
+				items: [
+					{ text: "Overview", link: "/packages" },
+					...getPackageReferenceItems(PACKAGES),
+				],
+			},
+		],
+		isDev
+	);
+}
+
+export function getNavigationItems(isDev: boolean): DefaultTheme.NavItem[] {
+	return filterDrafts(
+		[
+			...COMMON_ITEMS.map((section) =>
+				section.base === "/guides"
+					? { ...section, items: section.items?.filter((item) => "link" in item) }
+					: section
+			),
+			{
+				text: "Packages",
+				base: "/reference",
+				collapsed: false,
+				items: [
+					{ text: "Overview", link: "/packages" },
+					...getPackageReferenceItems(PACKAGES, ["Apps"]).flatMap(({ items }) => items ?? []),
+				],
+			},
+		],
+		isDev
+	).map(sidebarToNavItem);
+}
+
+function filterDrafts(items: SidebarItem[], isDev: boolean): DefaultTheme.SidebarItem[] {
+	return items
+		.filter(({ draft }) => isDev || !draft)
+		.map(({ draft, items: children, ...rest }) => ({
+			...rest,
+			...isDev && draft ? { text: `${rest.text}*` } : {},
+			...children ? { items: filterDrafts(children, isDev) } : {},
+		}));
+}
+
+function sidebarToNavItem({ text: navigationText, base, items = [] }: DefaultTheme.SidebarItem): DefaultTheme.NavItem {
+	return {
+		text: navigationText,
+		items: items.map(({ text = "", link = "" }) => ({
+			text,
+			activeMatch: base ? base + link : link,
+			link: base ? base + link : link,
+		})),
+	};
+}

@@ -1,24 +1,21 @@
-<script setup>
+<script setup lang="ts">
 import DefaultTheme from "vitepress/theme";
 import { onMounted } from "vue";
 import { useRouter } from "vitepress";
 import mediumZoom from "medium-zoom";
 import PackageBadge from "./PackageBadge.vue";
+import DraftBanner from "./DraftBanner.vue";
 
 const { Layout } = DefaultTheme;
 const router = useRouter();
 
-// Setup medium zoom with the desired options
 const setupMediumZoom = () => {
 	mediumZoom("[data-zoomable]", {
 		background: "transparent",
 	});
 };
 
-// Apply medium zoom on load
 onMounted(setupMediumZoom);
-
-// Subscribe to route changes to re-apply medium zoom effect
 router.onAfterRouteChange = setupMediumZoom;
 </script>
 
@@ -26,6 +23,7 @@ router.onAfterRouteChange = setupMediumZoom;
 	<Layout>
 		<template #doc-before>
 			<PackageBadge/>
+			<DraftBanner/>
 		</template>
 	</Layout>
 </template>

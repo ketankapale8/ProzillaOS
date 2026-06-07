@@ -12,7 +12,7 @@ This guide assumes you have already set up a basic React project with TypeScript
 
 ## Installation
 
-There are multiple ways to install ProzillaOS. The simplest way is to install the bundle package `prozilla-os`, which contains the core functionality as well as all standard applications.
+There are multiple ways to install ProzillaOS. The simplest way is to install the bundle package `prozilla-os`, which probably contains everything you will need.
 
 ::: code-group
 
@@ -34,7 +34,7 @@ bun add prozilla-os
 
 :::
 
-Alternatively, you can install the `@prozilla-os/core` package, which only contains the core functionality, and install the apps manually or create custom apps.
+Alternatively, you can install just the `@prozilla-os/core` package, which only contains the core functionality, and install the apps you want to use separately, or create your own.
 
 ::: code-group
 
@@ -56,58 +56,55 @@ bun add @prozilla-os/core
 
 :::
 
+::: warning
+
+Most guides will assume you are using the bundle. If you are not, remember to adapt the import statements to your own setup.
+
+:::
+
+For an overview of all available packages, refer to the [Packages](../reference/packages) page.
+
 ### Installing apps
 
-Install apps by running the command below. Replace `[app]` with the id of the app you want to install.
+Install apps by running the command below. Replace `[APP]` with the id of the app you want to install (e.g., `@prozilla-os/terminal` or `@prozilla-os/file-explorer`).
 
 ::: code-group
 
 ```bash [npm]
-npm install @prozilla-os/[app]
+npm install @prozilla-os/[APP]
 ```
 
 ```bash [Yarn]
-yarn add @prozilla-os/[app]
+yarn add @prozilla-os/[APP]
 ```
 
 ```bash [PNPM]
-pnpm add @prozilla-os/[app]
+pnpm add @prozilla-os/[APP]
 ```
 
 ```bash [Bun]
-bun add @prozilla-os/[app]
+bun add @prozilla-os/[APP]
 ```
 
 :::
 
+This just adds the app to your dependencies, [later in this guide](#using-apps) we will see how to actually "install" it into ProzillaOS.
+
 ## Usage
 
-Your entry file should look something like this:
+Create a component that renders ProzillaOS like this:
 
 ```tsx
-// index.tsx
-
-import React from "react";
-import ReactDOM from "react-dom/client";
-import { App } from "./App.tsx";
-
-const root = ReactDOM.createRoot(document.getElementById("root") as HTMLElement);
-root.render(<React.StrictMode><App/></React.StrictMode>);
-```
-
-Change your `<App>` component to:
-
-```tsx
-// App.tsx
+// MyComponent.tsx
 
 import { Desktop, ModalsView, ProzillaOS, Taskbar, WindowsView } from "prozilla-os";
 
-export function App(): ReactElement {
+function MyComponent() {
 	return <ProzillaOS
 		systemName={"Example"}
 		tagLine={"Powered by ProzillaOS"}
 		config={{
-			// Configuration
+			// Configurations go here
 		}}
 	>
 		<Taskbar/>
@@ -122,49 +119,89 @@ Replace `"Example"` with a system name of your choosing and `"Powered by Prozill
 
 If you don't want a taskbar/desktop/modal in your project, you can leave those components out. Unless you don't want to be able to open applications in your project, you will need to keep the `<WindowsView>` component.
 
-> [!NOTE]
-> Depending on how you installed ProzillaOS, your import statement will look slightly different. Make sure you are importing from the correct package that you installed previously.
-
 ### Using apps
 
-To start using applications in your project, use the `AppsConfig` class to add a list of apps to your configuration.
+To start using applications in your project, use the `AppsConfig` class to add a list of apps to your configuration. Here is an example with the `fileExplorer` app:
 
 ```tsx
-<ProzillaOS
-	{/* Other props */}
-	config={{
-		apps: new AppsConfig({
-			apps: [
-				// Applications go here
-			]
-		})
-	}}
->
+// MyComponent.tsx
+
+import { ProzillaOS, AppsConfig, fileExplorer } from "prozilla-os"
+
+function MyComponent() {
+	return <ProzillaOS
+		systemName={"Example"}
+		tagLine={"Powered by ProzillaOS"}
+		config={{
+			apps: new AppsConfig({
+				apps: [
+					fileExplorer.setName("Files")
+						.setDescription("Browse and manage your virtual files on ProzillaOS.")
+						.setIconUrl("/assets/apps/icons/file-explorer.svg"),
+				],
+			}),
+		}}
+	>
+		<Taskbar/>
+		<WindowsView/>
+		<ModalsView/>
+		<Desktop/>
+	</ProzillaOS>;
+}
 ```
 
-#### Example
+::: tip
 
-Here is an example that shows you how to add the fileExplorer app:
+Extracting your configurations to separate files is recommended to make them easier to find and adjust, and to avoid making a mess of your component.
+Here is an example of what that could look like:
+
+```ts
+// config/apps.config.ts
+
+import { AppsConfig, fileExplorer, terminal, textEditor } from "prozilla-os";
+
+export const appsConfig = new AppsConfig({
+	apps: [
+		fileExplorer.setName("Files")
+			.setDescription("Browse and manage your virtual files on ProzillaOS.")
+			.setIconUrl("/assets/apps/icons/file-explorer.svg")
+			.setShowDesktopIcon(true),
+		terminal.setName("Commands")
+			.setDescription("A command line tool inspired by the Unix shell that runs entirely in your browser using ProzillaOS. Allows you to interact and manipulate the virtual drive and run silly commands.")
+			.setIconUrl("/assets/apps/icons/terminal.svg")
+			.setShowDesktopIcon(true),
+		textEditor.setName("Notes")
+			.setDescription("Text editor for reading and writing text documents in a virtual file system using ProzillaOS.")
+			.setIconUrl("/assets/apps/icons/text-editor.svg"),
+	],
+});
+```
+
+Then reference the configuration in your component:
 
 ```tsx
-import { fileExplorer } from "prozilla-os"
+// components/MyComponent.tsx
 
-<ProzillaOS
-	{/* Other props */}
-	config={{
-		apps: new AppsConfig({
-			apps: [
-				fileExplorer.setName("Files")
-					.setDescription("Browse and manage your virtual files on ProzillaOS.")
-					.setIconUrl("/assets/apps/icons/file-explorer.svg")
-			]
-		})
-	}}
->
+import { Desktop, ModalsView, ProzillaOS, Taskbar, WindowsView } from "prozilla-os";
+import { appsConfig } from "../config/apps.config";
+
+function MyComponent() {
+	return <ProzillaOS
+		systemName={"Example"}
+		tagLine={"Powered by ProzillaOS"}
+		config={{
+			apps: appsConfig,
+		}}
+	>
+		<Taskbar/>
+		<WindowsView/>
+		<ModalsView/>
+		<Desktop/>
+	</ProzillaOS>;
+}
 ```
 
-> [!TIP]
-> Move your configurations to separate files to make them more readable and keep a better overview of your different configurations. You can then import these configurations into your `App.tsx` file and use them as values for the `config` prop of the `<ProzillaOS>` component.
+:::
 
 Once that's done, go ahead and start your project and open it in your browser to check it out. Congratulations, you've made your own operating system inside the browser!
 

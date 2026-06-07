@@ -1,16 +1,18 @@
 ---
 outline: deep
-description: "Learn how to create your own custom ProzillaOS apps"
+description: "Learn how to develop your own custom ProzillaOS app"
 image: "https://os.prozilla.dev/docs/thumbnails/custom-app-guide-thumbnail.png"
 ---
 
-# Making a custom app
+# App development
+
+This guide walks you through how to create a custom ProzillaOS app using the `App` class.
 
 ## Prerequisites
 
 This guide assumes you have already set up a basic React project with TypeScript. To learn more about how to set up a React project, check out the official [React documentation](https://react.dev/learn/start-a-new-react-project). The React documentation also has a guide on [how to start using TypeScript in your React project](https://react.dev/learn/typescript).
 
-## Building an interface
+## Building a user interface
 
 Create a new file called `MyApp.tsx` inside your `components` folder, this file will hold the main part of your interface, which will be a React component.
 
@@ -40,7 +42,7 @@ Then import your stylesheet in your React component and apply your classes:
 // src/components/MyApp.tsx
 
 import { WindowProps } from "prozilla-os";
-import styles from "./MyApp.module.css"
+import styles from "./MyApp.module.css";
 
 export function MyApp({ app }: WindowProps) {
 	return <h1 className={styles.Title}>Welcome to {app.name}!</h1>;
@@ -59,16 +61,10 @@ Create a new file called `main.ts`, this file will set your app's metadata and e
 import { App } from "prozilla-os";
 import { MyApp } from "./components/MyApp";
 
-/**
- * Change this to the name of your application
- * This is what users will see when they use your app
- */
+// The name of your application 
 const name = "My App";
 
-/**
- * Change this to the name of your application, but only use lower case letters and hyphens (-)
- * This won't be seen by users very often, but will be used by ProzillaOS to identify your app
- */
+// A unique identifier for your application (only consisting of lower case letters and hyphens).
 const id = "my-app";
 
 const myApp = new App(name, id, MyApp)
@@ -114,7 +110,8 @@ export function Test() {
 }
 ```
 
-You can leave out any of the following components if they are not important for testing your app: `<Taskbar/>`, `<ModalsView/>` and `<Desktop/>`. Alternatively, you can omit the default interface of ProzillaOS and focus on the interface of your app by changing your `Test.tsx` file to a standalone page for your app like this:
+You can leave out any of the following components if they are not important for testing your app: `<Taskbar/>`, `<ModalsView/>` and `<Desktop/>`.
+Or you can replace them with the standalone (fullscreen) view of your application like this:
 
 ```tsx
 // src/components/test/Test.tsx
@@ -241,4 +238,4 @@ I recommend setting up [changeset](https://github.com/changesets/changesets) to 
 
 ## Using your app
 
-There you go! You have now made a custom ProzillaOS app that you can start using in other ProzillaOS projects. Refer to the [Getting started guide](./getting-started) for more information about how to install and use your custom app.
+There you go! You have now made a custom ProzillaOS app that you can start using in other ProzillaOS projects. Refer to the [Getting started guide](./getting-started#installing-apps) for more information about how to install and use your custom app.

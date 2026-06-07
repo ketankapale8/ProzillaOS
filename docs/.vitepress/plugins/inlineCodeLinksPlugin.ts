@@ -83,17 +83,14 @@ export function inlineCodeLinksPlugin(markdownIt: MarkdownIt, { registry }: { re
 }
 
 function normalizeDisplayText(content: string, type: SymbolCategory): string {
-	if (type === "component") {
-		const name = content.replace(/^<|\/?>$/g, "").trim();
-		return `<${name}/>`;
+	switch (type) {
+		case "component":
+			return `<${content.replace(/^<|\/?>$/g, "").trim()}/>`;
+		case "function":
+			return `${content.replace(/\(\)$/g, "").trim()}()`;
+		default:
+			return content;
 	}
-
-	if (type === "function") {
-		const name = content.replace(/\(\)$/g, "").trim();
-		return `${name}()`;
-	}
-
-	return content;
 }
 
 function findSymbolEntry(registry: SymbolRegistry, content: string): SymbolEntry | undefined {
@@ -139,5 +136,5 @@ function resolveFunctionSymbol(registry: SymbolRegistry, content: string) {
 	if (!name)
 		return;
 
-	return registry.resolveSymbol(name, "function");
+	return registry.resolveSymbol(name, "function", "hook");
 }
