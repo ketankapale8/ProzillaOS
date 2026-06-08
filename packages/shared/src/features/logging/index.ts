@@ -1,3 +1,3 @@
 export * from "./ansi";
-export * from "./format";
+export * from "./inspect";
 export * from "./logger";

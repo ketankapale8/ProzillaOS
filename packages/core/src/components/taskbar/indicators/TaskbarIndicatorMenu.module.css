@@ -1,4 +1,4 @@
-.UtilMenuContainer {
+.IndicatorMenuContainer {
 	position: absolute;
 	right: 0;
 	bottom: 100%;
@@ -6,7 +6,16 @@
 	overflow: hidden;
 }
 
-.UtilMenu {
+.IndicatorMenuContainer:not(.Active) {
+	pointer-events: none;
+}
+
+.IndicatorMenuContainer:not(.Active) .IndicatorMenu {
+	opacity: 0;
+	transform: translateY(100px);
+}
+
+.IndicatorMenu {
 	opacity: 1;
 	display: flex;
 	border-top-left-radius: var(--border-radius-1);
@@ -20,7 +29,7 @@
 	resize: horizontal;
 }
 
-.UtilMenu::after {
+.IndicatorMenu::after {
 	opacity: var(--taskbar-menu-opacity);
 	content: "";
 	position: absolute;
@@ -30,13 +39,4 @@
 	right: 0;
 	background-color: var(--taskbar-menu-color);
 	z-index: -2;
-}
-
-.UtilMenuContainer:not(.Active) {
-	pointer-events: none;
-}
-
-.UtilMenuContainer:not(.Active) .UtilMenu {
-	opacity: 0;
-	transform: translateY(100px);
 }

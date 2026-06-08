@@ -1,14 +1,16 @@
-import { createContext, useContext, useMemo, type FC, type ReactNode } from "react";
-import { isEmpty } from "../../../features";
+import { createContext, useContext, type FC, type ReactNode } from "react";
+import { SlotsView, type SlotsViewProps } from "./SlotsView";
 
 /**
  * Slots are components that can override or enhance parts of a root component.
  * 
  * The value of each entry is the component that will be rendered in the slot associated with the corresponding key.
  * 
- * {@link createSlots} produces a context and provider that can be used to create a component with slots.
- * Slots are ignored if the root components has any children.
+ * {@link SlotsView} can be used to render slots.
+ * Slots are ignored if this components has any children.
  * Any missing slots will be replaced with a default component.
+ * 
+ * {@link createSlots} produces a context and provider that can be used to create a component with slots and give them access to a shared context.
  * 
  * @typeParam S - A dictionary mapping each slot name to a component.
  */
@@ -25,9 +27,34 @@ export type PropsWithSlots<S extends Record<string, FC>> = Slots<S> & {
 	/**
 	 * The content to render instead of the slots.
 	 * 
-	 * If this is not an empty value, the slots will be rendered instead.
+	 * If this is an empty value, the slots will be rendered instead.
 	 */
 	children?: ReactNode;
+};
+
+/**
+ * Infers the dictionary that maps slot names to components from the props of a component with slots (e.g., a component with props of type {@link PropsWithSlots}).
+ * @example
+ * ### From props
+ * This can be used to infer the slots from the props of a component with slots:
+ * ```ts
+ * type MyProps = PropsWithSlots<{ SlotA: FC; SlotB: FC }>;
+ * type MySlots = InferSlots<MyProps>; // Result: { SlotA: FC; SlotB: FC }
+ * ```
+ * ### From a component
+ * This can also be used in combination with `ComponentProps` to infer the slots directly from a component with slots.
+ * ```ts
+ * function MyComponent(props: PropsWithSlots<{ SlotA: FC; SlotB: FC }>) {
+ * 	// ...
+ * }
+ * 
+ * type MySlots = InferSlots<ComponentProps<typeof MyComponent>>; // Result: { SlotA: FC; SlotB: FC }
+ * ```
+ */
+export type InferSlots<T extends Slots<Record<string, FC>>> = {
+    [K in keyof T & string as K extends `render${infer Key}` 
+        ? Key
+        : never]: Exclude<T[K], undefined>;
 };
 
 /**
@@ -48,24 +75,15 @@ export interface SlotSystem<C> {
 	 * 
 	 * Usually placed inside a root component that accepts the props specified by {@link PropsWithSlots} and passes them to this component.
 	 * 
-	 * If {@link children} is not an empty value, they are rendered instead of the slots.
+	 * If {@link props.children} is not an empty value, they are rendered instead of the slots.
 	 * 
 	 * @typeParam S - A dictionary mapping each slot name to a component.
 	 */
-	SlotsProvider: <S extends Record<string, FC>>(props: {
+	SlotsProvider: <S extends Record<string, FC>>(props: SlotsViewProps<S> & {
 		/**
 		 * The context value to provide to slots via {@link useSlotsContext}.
-		 * 
-		 * For performance, memoize this value (e.g., with {@link useMemo} or by moving state out of render), if it is a reference, to prevent unnecessary re-renders of all slot components.
-		 * A new object reference every render causes every slot to re-render even if the data hasn't changed.
 		 */
 		context: C,
-		/** The default components to render in each slot if no override is given. */
-		defaults: S,
-		/** Slot components that replace the respective default component with a matching key. */
-		slots: Slots<S>,
-		/** Replaces all slots if not empty. */
-		children?: ReactNode
 	}) => ReactNode;
 }
 
@@ -76,9 +94,10 @@ const NO_CONTEXT = Symbol("noContext");
  * 
  * Communication between the root component and its slots happens via the context.
  * The root component renders the provider returned by this function and passes the context value to it, as well as any slots or children it receives.
- * The provider then renders the children of the root component, if there are any, or the slots.
+ * The provider then renders the children of the root component using {@link SlotsView}.
  * Slots can then use the hook to retrieve the context value from the root component.
  * 
+ * @see {@link SlotsView}
  * @param name - The name of the component associated with these slots.
  * @typeParam C - The type of the context value.
  * @returns A {@link SlotSystem} containing the hook and provider component for the slot system.
@@ -98,19 +117,23 @@ const NO_CONTEXT = Symbol("noContext");
  * 	return <input value={value} onChange={(event) => setValue(event.target.value)}/>;
  * }
  * 
+ * const DEFAULT_SLOTS = { Slot: MyDefaultSlot };
+ * 
  * // This is the root component.
  * function MyComponent({ children, ...slots }: PropsWithSlots<{ Slot: FC }>) {
  * 	const [value, setValue] = useState("No value set");
+ * 	const context = useMemo(() => ({ value, setValue }), [value]);
  * 
  * 	return <SlotsProvider
- * 	  context={{ value, setValue }}
- * 	  defaults={{ Slot: MyDefaultSlot }}
+ * 	  context={context}
+ * 	  defaults={DEFAULT_SLOTS}
  * 	  slots={slots}
  * 	>
  * 		{children}
  * 	</SlotsProvider>;
  * }
  * ```
+ * We use `useMemo()` here to avoid re-rendering all slots on every re-render of `<MyComponent/>`.
  * ### Usage
  * ```tsx
  * // We can use the component without any props and it will render the default slot.
@@ -131,40 +154,23 @@ export function createSlots<C>(name: string, defaultValue?: C): SlotSystem<C> {
 	const Context = createContext<C | typeof NO_CONTEXT>(defaultValue ?? NO_CONTEXT);
 	Context.displayName = `${name}Context`;
 
-	function useSlotsContext(): C {
+	const useSlotsContext: SlotSystem<C>["useSlotsContext"] = () => {
 		const context = useContext(Context);
 		if (context === NO_CONTEXT)
 			throw new Error(`${name} slots must be rendered inside ${name} to read from its context, because there is no default value.`);
 		return context;
 	};
 
-	function SlotsProvider<S extends Record<string, FC>>({ context, defaults, slots, children }: {
-		context: C,
-		defaults: S,
-		slots: Slots<S>,
-		children?: ReactNode
-	}): ReactNode {
+	const SlotsProvider: SlotSystem<C>["SlotsProvider"] = ({ context, defaults, slots, layout, children }) => {
 		return <Context.Provider value={context}>
-			{!isEmpty(children)
-				? children
-				: <SlotsView defaults={defaults} slots={slots}/>
-			}
+			<SlotsView defaults={defaults} slots={slots} layout={layout}>{children}</SlotsView>
 		</Context.Provider>;
-	}
+	};
 
 	return {
 		useSlotsContext,
 		SlotsProvider,
 	};
-}
-
-// eslint-disable-next-line react-refresh/only-export-components
-function SlotsView<S extends Record<string, FC>>({ defaults, slots }: { defaults: S, slots: Slots<S> }) {
-	return useMemo(() => Object.entries(defaults).map(([name, Default]) => {
-		const renderKey = `render${name.charAt(0).toUpperCase() + name.slice(1)}` as keyof typeof slots;
-		const Slot = (slots[renderKey] ?? Default) as FC;
-		return <Slot key={name}/>;
-	}), [defaults, slots]);
 }
 
 /**
@@ -205,6 +211,7 @@ export function attachSlots<T extends FC, S extends Record<string, FC>>(root: T,
 
 /**
  * Utility functions related to slots.
+ * @see {@link SlotsView}
  * @see {@link createSlots}
  */
 export namespace Slot {

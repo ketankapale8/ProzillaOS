@@ -1,6 +1,62 @@
 .HomeMenuContainer {
-	right: unset;
+	position: absolute;
 	left: 0;
+	bottom: 100%;
+	height: auto !important;
+	overflow: hidden;
+}
+
+.HomeMenuContainer:not(.Active) {
+	pointer-events: none;
+}
+
+.HomeMenu {
+	opacity: 1;
+	display: flex;
+	border-top-left-radius: var(--border-radius-1);
+	border-top-right-radius: var(--border-radius-1);
+	border-bottom-left-radius: var(--border-radius-1);
+	transform: none;
+	transition: opacity var(--transition-duration-1) var(--ease-in-out-default),
+		transform var(--transition-duration-1) var(--ease-in-out-default);
+	overflow: hidden;
+	resize: horizontal;
+}
+
+.HomeMenuContainer:not(.Active) .HomeMenu {
+	opacity: 0;
+	transform: translateY(50%);
+}
+
+.HomeMenu::after,
+.HomeMenuContainer::after {
+	content: "";
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	border-radius: inherit;
+	pointer-events: none;
+}
+
+.HomeMenu::after {
+	opacity: var(--taskbar-menu-opacity);
+	background-color: var(--taskbar-menu-color);
+	z-index: -2;
+}
+
+.HomeMenuContainer::after {
+	opacity: 1;
+	transition: opacity var(--transition-duration-1) var(--ease-in-out-default),
+		top var(--transition-duration-1) var(--ease-in-out-default);
+	backdrop-filter: var(--taskbar-filter);
+	z-index: -3;
+}
+
+.HomeMenuContainer:not(.Active)::after {
+	opacity: 0;
+	top: 50%;
 }
 
 .HomeMenu {

@@ -575,6 +575,7 @@ export class Shell {
 
 	/**
 	 * Processes a list of paths, falling back to standard input if the list is empty or contains "-".
+	 * @param params
 	 * @param params.paths - The list of file paths or "-" for stdin.
 	 * @param params.workingDirectory - The directory to resolve paths against.
 	 * @param params.commandName - The name of the command invoking this utility.

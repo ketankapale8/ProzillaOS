@@ -75,10 +75,8 @@ export function load(app) {
 
 	app.renderer.on(MarkdownPageEvent.END, (event) => {
 		const source = reformatSources(event);
-		const fileName = source?.fileName;
 		const sourceUrl = source?.url;
 
-		fixCodeBlockLanguages(event, fileName);
 		renameHeadings(event);
 
 		let editUrl;
@@ -279,19 +277,6 @@ function insertFrontmatter(event, editUrl) {
 			...Object.entries(frontmatter).map(([key, value]) => `${key}: ${value}`),
 			"---",
 		].join("\n") + "\n\n" + event.contents;
-	}
-}
-
-/**
- * @param {MarkdownPageEvent} event 
- * @param {string | undefined} fileName 
- */
-function fixCodeBlockLanguages(event, fileName) {
-	if (event.pageKind !== PageKind.Reflection)
-		return;
-
-	if (fileName?.endsWith(".tsx")) {
-		event.contents = event.contents.replaceAll(/^`{3}ts\s*$/gm, "```tsx");
 	}
 }
 

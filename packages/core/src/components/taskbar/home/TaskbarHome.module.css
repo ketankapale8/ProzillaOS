@@ -1,0 +1,25 @@
+.HomeContainer {
+	position: relative;
+	padding: 0 !important;
+}
+
+.HomeContainer,
+.HomeContainer > div {
+	height: 100%;
+	width: auto;
+}
+
+button.HomeButton {
+	padding: 0.5rem;
+}
+
+.HomeButton * {
+	fill: var(--foreground-color-0);
+	filter: none;
+}
+
+.HomeButton img {
+	height: 100%;
+	width: auto;
+	object-fit: contain;
+}

@@ -1,23 +1,19 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import styles from "./HomeMenu.module.css";
-import appStyles from "./AppList.module.css";
-import taskbarStyles from "../Taskbar.module.css";
+import styles from "./TaskbarHomeMenu.module.css";
+import appStyles from "../TaskbarMenus.module.css";
 import { faCircleInfo, faFileLines, faGear, faImage, faPowerOff } from "@fortawesome/free-solid-svg-icons";
 import { ReactSVG } from "react-svg";
 import { useEffect, useState } from "react";
-import { AppsConfig, closeViewport } from "../../../features";
 import { useClassNames, useInstalledApps, useKeyboardListener, useSystemManager, useVirtualRoot, useWindowsManager } from "../../../hooks";
+import { AppsConfig, closeViewport } from "../../../features";
 import { utilStyles } from "../../../styles";
-import { VectorImage } from "../../_utils/vector-image/VectorImage";
 import { Vector2 } from "@prozilla-os/shared";
+import { VectorImage } from "../../_utils/vector-image/VectorImage";
+import { useTaskbarContext } from "../taskbarSlots";
 
-interface HomeMenuProps {
-	active: boolean;
-	setActive: (show: boolean) => void;
-	search: (query: string) => void;
-}
-
-export function HomeMenu({ active, setActive, search }: HomeMenuProps) {
+export function TaskbarHomeMenu() {
+	const { activeMenu, setActiveMenu, toggleMenu } = useTaskbarContext();
+	const active = activeMenu === "home";
 	const { systemName, appsConfig, skin } = useSystemManager();
 	const windowsManager = useWindowsManager();
 	const virtualRoot = useVirtualRoot();
@@ -27,9 +23,9 @@ export function HomeMenu({ active, setActive, search }: HomeMenuProps) {
 		setTabIndex(active ? 0 : -1);
 	}, [active]);
 
-	const classNames = [styles.HomeMenuContainer, taskbarStyles.MenuContainer];
+	const classNames = [styles.HomeMenuContainer];
 	if (active)
-		classNames.push(taskbarStyles.Active);
+		classNames.push(styles.Active);
 
 	let onlyAltKey = false;
 	const onKeyDown = (event: KeyboardEvent) => {
@@ -39,16 +35,15 @@ export function HomeMenu({ active, setActive, search }: HomeMenuProps) {
 		} else {
 			onlyAltKey = false;
 
-			if (active && event.key.length === 1) {
-				search(event.key);
-			}
+			if (active && event.key.length === 1)
+				setActiveMenu("search");
 		}
 	};
 
 	const onKeyUp = (event: KeyboardEvent) => {
 		if (event.key === "Alt" && onlyAltKey) {
 			event.preventDefault();
-			setActive(!active);
+			toggleMenu("home");
 			onlyAltKey = false;
 		} else {
 			onlyAltKey = false;
@@ -65,7 +60,7 @@ export function HomeMenu({ active, setActive, search }: HomeMenuProps) {
 	const appButtonClassName = useClassNames([appStyles.AppButton], "SearchMenu", "AppButton");
 
 	return <div className={classNames.join(" ")}>
-		<div className={useClassNames([styles.HomeMenu, taskbarStyles.Menu], "Taskbar", "Menu", "Home")}>
+		<div className={useClassNames([styles.HomeMenu], "Taskbar", "Menu", "Home")}>
 			<div className={useClassNames([styles.Buttons], "HomeMenu", "Buttons")}>
 				<button tabIndex={tabIndex} onClick={() => { closeViewport(true, systemName); }}>
 					<FontAwesomeIcon icon={faPowerOff}/>
@@ -73,7 +68,7 @@ export function HomeMenu({ active, setActive, search }: HomeMenuProps) {
 				</button>
 				{settingsApp != null &&
 					<button tabIndex={tabIndex} onClick={() => {
-						setActive(false);
+						toggleMenu("home", false);
 						windowsManager?.open("settings");
 					}}>
 						<FontAwesomeIcon icon={faGear}/>
@@ -82,7 +77,7 @@ export function HomeMenu({ active, setActive, search }: HomeMenuProps) {
 				}
 				{textEditorApp != null &&
 					<button tabIndex={tabIndex} onClick={() => {
-						setActive(false);
+						toggleMenu("home", false);
 						windowsManager?.open("text-editor", {
 							mode: "view",
 							file: virtualRoot?.navigate("~/Documents/Info.md"),
@@ -95,14 +90,14 @@ export function HomeMenu({ active, setActive, search }: HomeMenuProps) {
 				}
 				{fileExplorerApp != null && <>
 					<button tabIndex={tabIndex} onClick={() => {
-						setActive(false);
+						toggleMenu("home", false);
 						windowsManager?.open(fileExplorerApp.id, { path: "~/Pictures" });
 					}}>
 						<FontAwesomeIcon icon={faImage}/>
 						<p className={utilStyles.TextRegular}>Images</p>
 					</button>
 					<button tabIndex={tabIndex} onClick={() => {
-						setActive(false);
+						toggleMenu("home", false);
 						windowsManager?.open(fileExplorerApp.id, { path: "~/Documents" }); }
 					}>
 						<FontAwesomeIcon icon={faFileLines}/>
@@ -116,13 +111,13 @@ export function HomeMenu({ active, setActive, search }: HomeMenuProps) {
 					<h1 className={utilStyles.TextBold}>{systemName}</h1>
 				</span>
 				<div className={useClassNames([appStyles.AppList], "HomeMenu", "AppList")}>
-					{apps.map(({ name, id, iconUrl }) => 
+					{apps.map(({ name, id, iconUrl }) =>
 						<button
 							key={id}
 							className={appButtonClassName}
 							tabIndex={tabIndex}
 							onClick={() => {
-								setActive(false);
+								toggleMenu("home", false);
 								windowsManager?.open(id);
 							}}
 							title={name}

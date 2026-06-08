@@ -1,19 +1,17 @@
-import { FC, memo, MouseEvent } from "react";
-import { App } from "../../../features/";
-import styles from "./AppIcon.module.css";
-import { useContextMenu } from "../../../hooks/modals/contextMenu";
-import { Actions } from "../../actions/Actions";
-import { ClickAction } from "../../actions/actions/ClickAction";
-import { useClassNames, useWindowsManager } from "../../../hooks";
+import { memo, MouseEvent } from "react";
+import { App } from "../../../features";
+import { useClassNames, useContextMenu, useWindowsManager } from "../../../hooks";
+import { Actions, ClickAction } from "../../actions";
+import styles from "./TaskbarAppButton.module.css";
 import { VectorImage } from "../../_utils/vector-image/VectorImage";
 
-interface AppButtonProps {
+export interface TaskbarAppButtonProps {
 	app: App;
 	active: boolean;
 	visible: boolean;
 }
 
-export const AppButton: FC<AppButtonProps> = memo(({ app, active, visible }: AppButtonProps) => {
+export const TaskbarAppButton = memo(({ app, active, visible }: TaskbarAppButtonProps) => {
 	const windowsManager = useWindowsManager();
 	// const settingsManager = useSettingsManager();
 	const { onContextMenu } = useContextMenu({ Actions: (props) =>
@@ -47,29 +45,27 @@ export const AppButton: FC<AppButtonProps> = memo(({ app, active, visible }: App
 	if (!visible)
 		classNames.push(styles.Hidden);
 
-	return (
-		<button
-			key={app.id}
-			tabIndex={0}
-			className={useClassNames(classNames, "Taskbar", "AppIcon")}
-			onClick={() => {
-				const windowId =  windowsManager.getAppWindowId(app.id);
+	return <button
+		key={app.id}
+		tabIndex={0}
+		className={useClassNames(classNames, "Taskbar", "AppIcon")}
+		onClick={() => {
+			const windowId =  windowsManager.getAppWindowId(app.id);
 
-				if (!active || windowId == null) {
-					windowsManager.open(app.id);
-				} else if (!windowsManager.isFocused(windowId)) {
-					windowsManager.focus(windowId);
-				} else {
-					windowsManager.setMinimized(windowId);
-				}
-			}}
-			onContextMenu={(event) => {
-				if (visible)
-					onContextMenu(event as unknown as MouseEvent<HTMLElement, MouseEvent>);
-			}}
-			title={app.name}
-		>
-			<VectorImage src={app.iconUrl as string}/>
-		</button>
-	);
+			if (!active || windowId == null) {
+				windowsManager.open(app.id);
+			} else if (!windowsManager.isFocused(windowId)) {
+				windowsManager.focus(windowId);
+			} else {
+				windowsManager.setMinimized(windowId);
+			}
+		}}
+		onContextMenu={(event) => {
+			if (visible)
+				onContextMenu(event as unknown as MouseEvent<HTMLElement, MouseEvent>);
+		}}
+		title={app.name}
+	>
+		<VectorImage src={app.iconUrl as string}/>
+	</button>;
 });

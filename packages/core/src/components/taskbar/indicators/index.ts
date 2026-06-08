@@ -1,4 +1,4 @@
-export { Battery } from "./Battery";
-export { Calendar } from "./Calendar";
-export { Network } from "./Network";
-export { Volume } from "./Volume";
+export { TaskbarBattery } from "./battery/TaskbarBattery";
+export { TaskbarNetwork } from "./network/TaskbarNetwork";
+export { TaskbarVolume } from "./volume/TaskbarVolume";
+export { TaskbarCalendar } from "./calendar/TaskbarCalendar";

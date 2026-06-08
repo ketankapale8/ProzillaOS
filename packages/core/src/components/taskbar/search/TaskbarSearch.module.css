@@ -1,0 +1,10 @@
+.SearchContainer {
+	position: relative;
+	padding: 0 !important;
+}
+
+.SearchContainer,
+.SearchContainer > div {
+	height: 100%;
+	width: auto;
+}

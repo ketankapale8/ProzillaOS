@@ -1,5 +1,5 @@
 import { Ansi } from "./ansi";
-import { inspect, InspectionOptions } from "./format";
+import { inspect, InspectionOptions } from "./inspect";
 
 /**
  * Applies a format to a string.

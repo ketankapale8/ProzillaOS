@@ -1,36 +1,31 @@
 import { faBatteryEmpty, faBatteryFull, faBatteryHalf, faBatteryQuarter, faBatteryThreeQuarters, faMinus } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useEffect, useState } from "react";
-import styles from "./Battery.module.css";
-import { UtilMenu } from "../menus/UtilMenu";
-import { OutsideClickListener } from "../../../hooks/_utils/outsideClick";
-import { useClassNames } from "../../../hooks/_utils/classNames";
-import { useTaskbarContext } from "../taskbarSlots";
+import styles from "./TaskbarBattery.module.css";
+import { OutsideClickListener, useClassNames } from "../../../../hooks";
+import { TaskbarIndicatorMenu } from "../TaskbarIndicatorMenu";
+import { useTaskbarIndicatorState } from "../taskbarIndicatorState";
 
-type Battery = {
-	charging: boolean | ((prevState: boolean) => boolean);
+type BatteryManager = {
+	charging: boolean;
 	level: number;
-	addEventListener: (arg0: string, arg1: {
-		(): void;
-		(): void;
-	}) => void;
-	removeEventListener: (arg0: string, arg1: {
-		(): void;
-		(): void;
-	}) => void;
+	addEventListener: (event: string, handler: () => void) => void;
+	removeEventListener: (event: string, handler: () => void) => void;
 };
 
-export function Battery() {
-	const { showUtilMenus, hideUtilMenus } = useTaskbarContext();
+export function TaskbarBattery() {
+	const [active, setActive] = useTaskbarIndicatorState();
 	const [isCharging, setIsCharging] = useState(true);
 	const [percentage, setPercentage] = useState(100);
-	const [showMenu, setShowMenu] = useState(false);
 	// const [chargingTime, setChargingTime] = useState(0);
 	// const [dischargingTime, setDischargingTime] = useState(0);
 
 	useEffect(() => {
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
-		(navigator as any).getBattery?.()?.then((battery: Battery) => {
+		const getBattery = (navigator as Navigator & { getBattery?: () => Promise<BatteryManager> }).getBattery;
+		if (!getBattery) return;
+
+		let cleanUp: (() => void) | undefined;
+		void getBattery().then((battery: BatteryManager) => {
 			const updateIsCharging = () => {
 				setIsCharging(battery.charging);
 			};
@@ -57,27 +52,18 @@ export function Battery() {
 			// battery.addEventListener("chargingtimechange", updateChargingTime);
 			// battery.addEventListener("dischargingtimechange", updateDischargingTime);
 
-			return () => {
+			cleanUp = () => {
 				battery.removeEventListener("chargingchange", updateIsCharging);
 				battery.removeEventListener("levelchange", updatePercentage);
 				// battery.removeEventListener("chargingtimechange", updateChargingTime);
 				// battery.removeEventListener("dischargingtimechange", updateDischargingTime);
 			};
 		});
+		
+		return () => {
+			cleanUp?.();
+		};
 	}, []);
-
-	useEffect(() => {
-		if (hideUtilMenus && showMenu) {
-			setShowMenu(false);
-		}
-	}, [hideUtilMenus, showMenu]);
-
-	const updateShowMenu = (show: boolean) => {
-		if (show)
-			showUtilMenus();
-
-		setShowMenu(show);
-	};
 
 	let icon = faBatteryFull;
 	if (percentage < 10) {
@@ -90,15 +76,15 @@ export function Battery() {
 		icon = faBatteryThreeQuarters;
 	}
 
-	return <OutsideClickListener onOutsideClick={() => { updateShowMenu(false); }}>
-		<button className={useClassNames([styles.Button], "Taskbar", "Indicator", "Battery")} title="Battery" tabIndex={0} onClick={() => { updateShowMenu(!showMenu); }}>
+	return <OutsideClickListener onOutsideClick={() => { setActive(false); }}>
+		<button className={useClassNames([styles.Button], "Taskbar", "Indicator", "Battery")} title="Battery" tabIndex={0} onClick={() => { setActive(!active); }}>
 			{!isCharging
 				? <FontAwesomeIcon className={styles["Charging-indicator"]} icon={faMinus}/>
 				: null
 			}
 			<FontAwesomeIcon icon={icon}/>
 		</button>
-		<UtilMenu active={showMenu} setActive={setShowMenu} className={styles.Menu}>
+		<TaskbarIndicatorMenu active={active} className={styles.Menu}>
 			<div>
 				{!isCharging
 					? <FontAwesomeIcon className={styles["Charging-indicator"]} icon={faMinus}/>
@@ -107,6 +93,6 @@ export function Battery() {
 				<FontAwesomeIcon icon={icon}/>
 			</div>
 			<p>{Math.round(percentage)}%</p>
-		</UtilMenu>
+		</TaskbarIndicatorMenu>
 	</OutsideClickListener>;
 }

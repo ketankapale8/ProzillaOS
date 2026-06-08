@@ -1,0 +1,40 @@
+.AppIconsContainer {
+	position: relative;
+	width: 100%;
+	height: auto;
+	overflow: hidden;
+	pointer-events: none;
+}
+
+.AppIcons {
+	display: flex;
+	align-items: center;
+	height: 100%;
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	overflow-x: auto;
+	overflow-y: hidden;
+	pointer-events: auto;
+	z-index: -1;
+}
+
+.AppIcons::-webkit-scrollbar {
+	display: none;
+}
+
+.AppIcons > * {
+	height: 100%;
+	padding: 0.75rem;
+}
+
+.AppIcons > * > svg {
+	height: 1.25rem;
+}
+
+.AppIcons > button div,
+.AppIcons > button div > svg {
+	height: 100%;
+	width: auto;
+}

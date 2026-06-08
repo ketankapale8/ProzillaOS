@@ -20,7 +20,7 @@
 }
 
 .AppIcon.Hidden {
-	animation: disappear var(--transition-duration-2)var(--ease-in-out-default) forwards;
+	animation: disappear var(--transition-duration-2) var(--ease-in-out-default) forwards;
 	pointer-events: none;
 }
 
@@ -55,7 +55,7 @@
 	width: 90%;
 	height: 0.15rem;
 	background-color: var(--foreground-color-0);
-	transition: height var(--transition-duration-1)var(--ease-in-out-default), width var(--transition-duration-1) var(--ease-in-out-default);
+	transition: height var(--transition-duration-1) var(--ease-in-out-default), width var(--transition-duration-1) var(--ease-in-out-default);
 	transform: translateX(-50%);
 	-webkit-transform: translateX(-50%);
 }
