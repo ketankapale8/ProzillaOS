@@ -1,4 +1,4 @@
-import { memo, type FC } from "react";
+import { memo, ReactNode, type FC } from "react";
 import styles from "./TaskbarIndicators.module.css";
 import { attachSlots, type PropsWithSlots } from "../../_utils/slots/slots";
 import { useClassNames } from "../../../hooks";
@@ -19,7 +19,7 @@ const DEFAULT_SLOTS = {
 	DesktopButton: TaskbarDesktopButton,
 };
 
-function IndicatorsRoot({ children, ...slots }: TaskbarIndicatorsProps) {
+function IndicatorsRoot({ children, ...slots }: TaskbarIndicatorsProps): ReactNode {
 	return <div className={useClassNames([styles.UtilIcons], "Taskbar", "UtilIcons")}>
 		<SlotsView
 			defaults={DEFAULT_SLOTS}
@@ -30,7 +30,7 @@ function IndicatorsRoot({ children, ...slots }: TaskbarIndicatorsProps) {
 	</div>;
 }
 
-export const TaskbarIndicators = attachSlots(memo(IndicatorsRoot), {
+export const TaskbarIndicators = attachSlots<typeof IndicatorsRoot>(memo(IndicatorsRoot), {
 	/** Component that renders the battery indicator in the taskbar. */
 	Battery: TaskbarBattery,
 	/** Component that renders the network indicator in the taskbar. */

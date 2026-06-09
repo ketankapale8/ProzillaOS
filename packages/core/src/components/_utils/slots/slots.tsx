@@ -1,4 +1,4 @@
-import { createContext, useContext, type FC, type ReactNode } from "react";
+import { ComponentProps, createContext, useContext, type FC, type ReactNode } from "react";
 import { SlotsView, type SlotsViewProps } from "./SlotsView";
 
 /**
@@ -194,7 +194,12 @@ export function createSlots<C>(name: string, defaultValue?: C): SlotSystem<C> {
  * </Accordion>
  * ```
  */
-export function attachSlots<T extends FC, S extends Record<string, FC>>(root: T, slots: S, name?: string) {
+export function attachSlots<T extends FC<Record<string, FC>>, S extends Record<string, FC> = InferSlots<ComponentProps<T>>>(root: T, slots: S, name?: string): T & S
+/**
+ * @inheritdoc attachSlots
+ */
+export function attachSlots<T extends FC, S extends Record<string, FC>>(root: T, slots: S, name?: string): T & S
+export function attachSlots<T extends FC, S extends Record<string, FC>>(root: T, slots: S, name?: string): T & S {
 	const rootName = name ?? root.displayName ?? root.name;
 
 	if (rootName) {

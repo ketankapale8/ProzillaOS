@@ -1,4 +1,4 @@
-import { memo, MouseEvent, useCallback, useMemo, useRef, useState, type FC } from "react";
+import { memo, MouseEvent, ReactNode, useCallback, useMemo, useRef, useState, type FC } from "react";
 import styles from "./Taskbar.module.css";
 import { attachSlots, InferSlots, type PropsWithSlots } from "../_utils/slots/slots";
 import { useClassNames, useSystemManager } from "../../hooks";
@@ -28,7 +28,7 @@ const DEFAULT_SLOTS: InferSlots<TaskbarProps> = {
 	Indicators: TaskbarIndicators,
 };
 
-function TaskbarRoot({ children, ...slots }: TaskbarProps) {
+function TaskbarRoot({ children, ...slots }: TaskbarProps): ReactNode {
 	const { taskbarConfig, appsConfig } = useSystemManager();
 	const [activeMenu, setActiveMenu] = useState<TaskbarContext["activeMenu"]>(null);
 	const [searchQuery, setSearchQuery] = useState("");
@@ -116,7 +116,7 @@ function TaskbarLayout({ Home, Search, Apps, Indicators }: InferSlots<TaskbarPro
 /**
  * Component that renders the home menu, search menu, pinned and active applications and various indicators.
  */
-export const Taskbar = attachSlots(memo(TaskbarRoot), {
+export const Taskbar = attachSlots<typeof TaskbarRoot>(memo(TaskbarRoot), {
 	/** Component that renders the home menu in the taskbar. */
 	Home: TaskbarHome,
 	/** Component that renders the search menu in the taskbar. */
