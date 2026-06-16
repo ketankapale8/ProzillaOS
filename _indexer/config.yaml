@@ -1,0 +1,34 @@
+server:
+  port: 5001
+  env: development
+
+repos:
+  - id: prozilla-os
+    name: "ProzillaOS Demo"
+    localPath: "../"
+    extensions: [".tsx", ".ts", ".jsx", ".js", ".css", ".json", ".py", ".md"]
+    excludeDirs: ["node_modules", ".git", "_indexer"]
+    jiraProjects: ["SCRUM", "PROZILLA", "POS"]
+
+llm:
+  fast:
+    providers:
+      - name: gemini
+        model: gemini-2.0-flash
+        envKey: GEMINI_API_KEY
+  balanced:
+    providers:
+      - name: gemini
+        model: gemini-2.0-flash
+        envKey: GEMINI_API_KEY
+  deep:
+    providers:
+      - name: gemini
+        model: gemini-2.0-flash
+        envKey: GEMINI_API_KEY
+
+indexer:
+  chunkSizeChars: 1200
+  chunkOverlapChars: 200
+  embeddingDelayMs: 120
+  hashCachePath: "./data/hashes"
